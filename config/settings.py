@@ -79,6 +79,9 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "dashboard"
 
 
 # Password validation

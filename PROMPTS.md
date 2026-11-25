@@ -28,6 +28,22 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-25 — Phase 2: register, login, logout (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md implement phase 2`
+2. "yes, approved" (the three TDD behaviors: valid registration logs in, invalid registration re-renders with errors, logout only via POST)
+3. "yes, approved" (cycle 1 RED test: a valid registration POST creates the user, logs them in, and redirects to the dashboard)
+4. "if its not a genuine red, let's group it with the normal tests"
+5. "in 4, I don't see an error. Just a blank screen."
+6. "the manual checks pass"
+7. "yes, add just that one line" (CLAUDE.md: `UserFactory` and `DEFAULT_PASSWORD`)
+
+### Summary
+- **Outcome:** `RegisterForm` (on `UserCreationForm`) and a `register` view that logs the new user in and redirects to `/`; login and logout from Django's built-in `LoginView`/`LogoutView` under `/accounts/`; `LOGIN_URL`, `LOGIN_REDIRECT_URL`, and `LOGOUT_REDIRECT_URL` settings; register/login templates sharing a DaisyUI form-fields partial; a header showing the username and a POST logout button, or login/register links. Added `tests/factories.py::UserFactory` and 12 tests in `tests/test_accounts.py`. 22 tests pass, Ruff clean, all Phase 2 criteria ticked. CLAUDE.md gained one line about `UserFactory`/`DEFAULT_PASSWORD`.
+- **Deviations:** Only cycle 1 ran as true TDD. Claude flagged that the invalid-registration test would pass immediately (the view already re-renders a bound invalid form); I chose to move it into the normal tests. Claude applied the same rule to the logout test, since Django's `LogoutView` already rejects GET with 405.
+- **Sideways:** The manual step 4 instructions promised a "405 error page", but Django's 405 has an empty body, so the browser showed a blank screen. Claude explained how to confirm the 405 status in DevTools or with curl; no code change was made. The `login` route was added early as scaffolding because the register template links to it. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-24 — Phase 1: walking skeleton (TDD)
 
 ### Prompts

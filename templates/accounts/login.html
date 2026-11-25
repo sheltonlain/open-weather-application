@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Log in · Open Weather App{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 shadow max-w-md mx-auto">
+  <div class="card-body">
+    <h1 class="card-title text-2xl">Log in</h1>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      {% include "accounts/partials/form_fields.html" %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary w-full">Log in</button>
+    </form>
+    <p class="text-sm">New here? <a href="{% url 'register' %}" class="link">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -56,10 +56,10 @@ Full-page registration, login, and logout. The dashboard header shows the logged
 
 ### Acceptance criteria
 
-- [ ] A visitor can register with a username and password and is logged in afterwards
-- [ ] Invalid registrations (username taken, mismatched passwords) re-render with errors
-- [ ] A user can log in and log out; logout uses POST
-- [ ] The header reflects the authentication state
+- [x] A visitor can register with a username and password and is logged in afterwards
+- [x] Invalid registrations (username taken, mismatched passwords) re-render with errors
+- [x] A user can log in and log out; logout uses POST
+- [x] The header reflects the authentication state
 
 ---
 

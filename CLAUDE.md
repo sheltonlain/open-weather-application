@@ -52,6 +52,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 - Test views by mocking HTTP the same way, or by patching the service function when only view behavior matters.
 - Cover failure paths: timeout, non-200, malformed JSON → `WeatherServiceError` → friendly message.
 - Tests use a fake key via settings override, never the real one. Clear the cache between tests (autouse fixture). Use factory_boy for users and favorites.
+- Test users come from `tests/factories.py::UserFactory`; their password is `DEFAULT_PASSWORD`.
 
 ## 7. TDD Protocol (Red → Green → Refactor)
 Work in thin vertical slices: one behavior at a time, end to end.

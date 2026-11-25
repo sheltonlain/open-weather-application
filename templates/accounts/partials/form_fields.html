@@ -1,0 +1,15 @@
+{% for error in form.non_field_errors %}
+<div role="alert" class="alert alert-error">{{ error }}</div>
+{% endfor %}
+{% for field in form %}
+<fieldset class="fieldset">
+  <label class="fieldset-legend" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  <input type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+         value="{% if field.field.widget.input_type != 'password' %}{{ field.value|default_if_none:'' }}{% endif %}"
+         class="input w-full{% if field.errors %} input-error{% endif %}"
+         {% if field.field.required %}required{% endif %}>
+  {% for error in field.errors %}
+  <p class="label text-error">{{ error }}</p>
+  {% endfor %}
+</fieldset>
+{% endfor %}
