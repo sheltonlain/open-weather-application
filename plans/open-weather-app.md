@@ -73,11 +73,11 @@ A single search box on the dashboard that sends `GET /weather/search/?q=` via HT
 
 ### Acceptance criteria
 
-- [ ] A city query calls `/geo/1.0/direct` with the expected params (asserted via `responses`)
-- [ ] Results render as a list with name, state, and country; one match still renders as a list
-- [ ] An empty result shows "no results found"; a blank query is handled gracefully
-- [ ] A timeout, non-200 response, or malformed JSON raises `WeatherServiceError` and shows a friendly message
-- [ ] An HTMX request returns the partial; a non-HTMX request returns the full page
+- [x] A city query calls `/geo/1.0/direct` with the expected params (asserted via `responses`)
+- [x] Results render as a list with name, state, and country; one match still renders as a list
+- [x] An empty result shows "no results found"; a blank query is handled gracefully
+- [x] A timeout, non-200 response, or malformed JSON raises `WeatherServiceError` and shows a friendly message
+- [x] An HTMX request returns the partial; a non-HTMX request returns the full page
 
 ---
 

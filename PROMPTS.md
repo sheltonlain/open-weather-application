@@ -28,6 +28,31 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-25 — Phase 3: city search to results list (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md Implement phase 3`
+2. "yes, approved" (the three TDD behaviors: city query calls `/geo/1.0/direct` and returns places, failures raise `WeatherServiceError`, HTMX gets the partial and other requests the full page)
+3. "yes, approved" (cycle 1 RED test: `search_cities("London")` calls direct geocoding with `q`, `limit=5`, `appid` and returns `Place` objects)
+4. "yes, go ahead"
+5. "yes, approved" (cycle 2 RED test: timeout, non-200, and malformed JSON each raise `WeatherServiceError`)
+6. "yes, go ahead"
+7. "yes, approved" (cycle 3 RED test: an HTMX request to `/weather/search/` renders only the results partial)
+8. "yes, go ahead" (finish the non-TDD parts of the phase)
+9. "In 6, I do not see a result without the state"
+10. "Step 6 generates the following list: Paris, Ile-de-France, FR"
+11. "Sorry, step 6 actually returns: Paris, Ile-de-France, FR"
+12. "Sorry, step 6 actually returns Paris, Ile-de-France, FR / Paris, Ile-de-France, FR / Parus, Texas, US"
+13. "yes, add the duplicate removal test-first"
+14. "yes, approved" (RED test: duplicate name/state/country results are dropped, keeping the first)
+15. "the manual checks pass"
+16. "yes, add just that one line" (CLAUDE.md: shared OpenWeather test helpers in `tests/openweather.py`)
+
+### Summary
+- **Outcome:** `weather/services.py` with a `Place` dataclass, `WeatherServiceError`, a shared `_get_json` helper (API key from settings, 5s timeout, `raise_for_status`, errors re-raised `from None` so the key-bearing URL never reaches tracebacks), and `search_cities` (limit 5, missing `state` tolerated, duplicates removed). `GET /weather/search/?q=` view returning the results partial for HTMX and a full page otherwise; a blank query shows a hint without calling OpenWeather; service failures show a friendly message (status 200 so HTMX swaps it). Search form and results partials included on the dashboard and the full search page. Fixtures for London, Paris, and Paris TX; shared helpers in `tests/openweather.py`. 42 tests pass, Ruff clean, all Phase 3 criteria ticked. CLAUDE.md gained one line about `tests/openweather.py`.
+- **Deviations:** The full-page test for cycle 3 passed against the scaffolding stub, so it was kept as a normal regression test rather than a TDD cycle (same rule as phase 2). Save buttons on results were deferred to phase 8. Duplicate removal was not in the plan; it was added test-first after manual testing exposed it.
+- **Sideways:** Manual step 6 wrongly promised that "Paris" would show a result without a state; OpenWeather returns "Ile-de-France". Claude corrected the instructions and pointed to the automated test for the no-state case. Several rounds of correcting the reported step 6 output then revealed OpenWeather returning the same Paris twice with slightly different coordinates, which the fixtures had not covered; this led to the duplicate-removal cycle. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-25 — Phase 2: register, login, logout (TDD)
 
 ### Prompts

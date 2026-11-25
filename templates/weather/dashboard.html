@@ -4,9 +4,10 @@
 <div class="grid gap-4 lg:grid-cols-4">
   <section class="lg:col-span-3 space-y-4">
     <div id="search" class="card bg-base-100 shadow">
-      <div class="card-body">
+      <div class="card-body space-y-4">
         <h2 class="card-title">Search</h2>
-        <p class="text-base-content/70">Search by city or ZIP code (coming soon).</p>
+        {% include "weather/partials/search_form.html" %}
+        {% include "weather/partials/search_results.html" %}
       </div>
     </div>
     <div id="weather-panel" class="card bg-base-100 shadow">

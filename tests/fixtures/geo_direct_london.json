@@ -1,0 +1,25 @@
+[
+  {
+    "name": "London",
+    "local_names": {"en": "London", "fr": "Londres"},
+    "lat": 51.5073219,
+    "lon": -0.1276474,
+    "country": "GB",
+    "state": "England"
+  },
+  {
+    "name": "London",
+    "local_names": {"en": "London"},
+    "lat": 42.9832406,
+    "lon": -81.243372,
+    "country": "CA",
+    "state": "Ontario"
+  },
+  {
+    "name": "London",
+    "lat": 39.8864493,
+    "lon": -83.4482508,
+    "country": "US",
+    "state": "Ohio"
+  }
+]

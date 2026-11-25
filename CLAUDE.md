@@ -53,6 +53,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 - Cover failure paths: timeout, non-200, malformed JSON → `WeatherServiceError` → friendly message.
 - Tests use a fake key via settings override, never the real one. Clear the cache between tests (autouse fixture). Use factory_boy for users and favorites.
 - Test users come from `tests/factories.py::UserFactory`; their password is `DEFAULT_PASSWORD`.
+- Shared OpenWeather test helpers (`load_fixture`, endpoint URL constants) live in `tests/openweather.py`; reuse them instead of redefining per test file.
 
 ## 7. TDD Protocol (Red → Green → Refactor)
 Work in thin vertical slices: one behavior at a time, end to end.
