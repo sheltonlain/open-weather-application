@@ -1,0 +1,18 @@
+{% load tailwind_cli django_htmx %}<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Open Weather App{% endblock %}</title>
+  {% tailwind_css %}
+  {% htmx_script %}
+</head>
+<body class="min-h-screen bg-base-200" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <header class="navbar bg-base-100 shadow-sm">
+    <a href="{% url 'dashboard' %}" class="btn btn-ghost text-xl">Open Weather</a>
+  </header>
+  <main class="container mx-auto p-4">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

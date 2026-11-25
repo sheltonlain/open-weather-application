@@ -221,3 +221,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# django-tailwind-cli: downloaded CLI/daisyUI bundles and generated CSS
+.django_tailwind_cli/
+assets/css/tailwind.css

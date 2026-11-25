@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid gap-4 lg:grid-cols-4">
+  <section class="lg:col-span-3 space-y-4">
+    <div id="search" class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Search</h2>
+        <p class="text-base-content/70">Search by city or ZIP code (coming soon).</p>
+      </div>
+    </div>
+    <div id="weather-panel" class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Weather</h2>
+        <p class="text-base-content/70">Pick a place to see its weather.</p>
+      </div>
+    </div>
+  </section>
+  <aside id="favorites" class="card bg-base-100 shadow">
+    <div class="card-body">
+      <h2 class="card-title">Favorites</h2>
+      <p class="text-base-content/70">Your saved places will appear here.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}

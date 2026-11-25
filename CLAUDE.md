@@ -7,7 +7,7 @@ Open Weather App: an educational Django web app giving users current weather, mu
 - **Backend:** Python 3.12+, Django, SQLite (`db.sqlite3`)
 - **Frontend:** Django templates, HTMX + django-htmx, Tailwind CSS + DaisyUI via django-tailwind-cli. Chart.js and Leaflet from CDN (pinned versions). No Node/npm.
 - **Weather data:** OpenWeather **free 2.5 APIs** only: `/data/2.5/weather`, `/data/2.5/forecast`, `/geo/1.0/direct`, `/geo/1.0/zip`, `/geo/1.0/reverse`. No One Call 3.0, so **no UV index**.
-- **HTTP:** `requests`. **Tests:** pytest, pytest-django, factory_boy, `responses`. **Lint/format:** Ruff.
+- **HTTP:** `requests`. **Config:** `python-dotenv` (loads `.env`). **Tests:** pytest, pytest-django, factory_boy, `responses`. **Lint/format:** Ruff.
 - **Package manager:** `uv`
   - Add package: `uv add <package>` (dev: `uv add --dev <package>`)
   - Run server + Tailwind watcher: `uv run python manage.py tailwind runserver`
@@ -48,6 +48,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 - **Why:** the suite must run fully offline, fast, and without consuming live OpenWeather quota or needing the real API key.
 - **Seam:** `weather/services.py` is the single boundary to the outside world. Mock at the HTTP layer with `responses` so the real service code (URL building, params, parsing, error handling) is exercised.
 - Use saved JSON fixtures in `tests/fixtures/`. Assert the expected URL/params were called. Any unmocked outbound call must fail the test.
+- The autouse `mocked_responses` fixture (`tests/conftest.py`) already blocks real HTTP; register OpenWeather mocks on it rather than opening another `responses.RequestsMock`.
 - Test views by mocking HTTP the same way, or by patching the service function when only view behavior matters.
 - Cover failure paths: timeout, non-200, malformed JSON → `WeatherServiceError` → friendly message.
 - Tests use a fake key via settings override, never the real one. Clear the cache between tests (autouse fixture). Use factory_boy for users and favorites.

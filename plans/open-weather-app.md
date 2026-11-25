@@ -37,12 +37,12 @@ A running Django project with the three apps, the custom `User` model (with `uni
 
 ### Acceptance criteria
 
-- [ ] `GET /` returns 200 and renders the dashboard shell extending `base.html`
-- [ ] `AUTH_USER_MODEL` points to `accounts.User` with a `units` field defaulting to `metric`
-- [ ] Startup fails with a clear error if `OPENWEATHER_API_KEY` or `SECRET_KEY` is missing
-- [ ] `.env.example` exists with placeholder values only; `.env` and `db.sqlite3` stay gitignored
-- [ ] `base.html` sends the CSRF token on HTMX requests via `hx-headers`
-- [ ] `uv run pytest` and Ruff pass
+- [x] `GET /` returns 200 and renders the dashboard shell extending `base.html`
+- [x] `AUTH_USER_MODEL` points to `accounts.User` with a `units` field defaulting to `metric`
+- [x] Startup fails with a clear error if `OPENWEATHER_API_KEY` or `SECRET_KEY` is missing
+- [x] `.env.example` exists with placeholder values only; `.env` and `db.sqlite3` stay gitignored
+- [x] `base.html` sends the CSRF token on HTMX requests via `hx-headers`
+- [x] `uv run pytest` and Ruff pass
 
 ---
 

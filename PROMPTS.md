@@ -28,6 +28,28 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-24 — Phase 1: walking skeleton (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md Implement phase 1`
+2. "yes, approved" (the three TDD behaviors: dashboard renders, missing secret fails startup, CSRF via `hx-headers`)
+3. "python-dotenv (Recommended)" (answer to: how to load `.env`, since no dotenv package was in the stack)
+4. "yes, approved" (cycle 1 RED test: `GET /` renders `weather/dashboard.html` extending `base.html`)
+5. "yes, go ahead"
+6. "yes, approved" (cycle 2 RED test: `require_env` raises `ImproperlyConfigured` naming the variable)
+7. "yes, go ahead"
+8. "yes, approved" (cycle 3 RED test: the page's `hx-headers` token passes Django's CSRF check on a POST)
+9. "yes, go ahead" (finish the non-TDD parts of the phase)
+10. "Do step 2 for me. I don't understand it. Explain how it works"
+11. "the manual checks pass"
+12. "Can these be easily determined by reading files in the codebase?" (about the proposed CLAUDE.md additions)
+13. "yes, add just that one line"
+
+### Summary
+- **Outcome:** Django project (`config/`) with the `accounts`, `weather`, and `favorites` apps; custom `accounts.User` with `units` (default metric) as the first migration; secrets loaded from `.env` via python-dotenv and `config.env.require_env()`, which fails loudly when one is missing; `base.html` with Tailwind/daisyUI (django-tailwind-cli, plugin mode), HTMX via django-htmx's bundled script, and the CSRF `hx-headers`; placeholder dashboard at `/`. Test harness: `config/test_settings.py` with fake keys, autouse fixtures that clear the cache and block unmocked HTTP. 10 tests pass, Ruff clean, all Phase 1 criteria ticked. CLAUDE.md gained python-dotenv in the stack and one line about the shared `mocked_responses` fixture.
+- **Deviations:** Asked a follow-up about adding python-dotenv (not in the approved stack); the recommended option was accepted. Asked Claude to do manual step 2 (create `.env`) and explain it; Claude generated `SECRET_KEY` but left the OpenWeather key as a placeholder for me to paste. Questioned whether the three proposed CLAUDE.md additions were discoverable from the code; trimmed them to the one non-obvious rule.
+- **Sideways:** `require_env` started as a non-raising stub so the cycle 2 test could fail on an assertion; `makemigrations` ran against that stub with no `.env`, which only worked because the stub didn't raise yet. The empty-value branch of `require_env` (`SECRET_KEY=`) is implemented but has no test of its own. The CSRF test can't compare token strings (Django masks them per render), so it asserts a POST with the page's token isn't rejected with 403. Ruff auto-fixed 6 issues and reformatted Django's generated files. `requirements.md` was untracked before this session and was left out of the commit.
+
 ## 2026-11-24 — Grill-me design session, CLAUDE.md, and PRD
 
 ### Prompts
