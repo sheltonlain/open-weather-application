@@ -8,8 +8,9 @@ from pytest_django.asserts import (
     assertTemplateNotUsed,
     assertTemplateUsed,
 )
+from responses import matchers
 
-from tests.openweather import GEO_DIRECT_URL, load_fixture
+from tests.openweather import GEO_DIRECT_URL, GEO_ZIP_URL, load_fixture
 from weather.services import Place
 
 LONDON = Place("London", "England", "GB", 51.5073219, -0.1276474)
@@ -85,6 +86,58 @@ def test_place_without_state_omits_it(client, mocked_responses):
 
 
 @pytest.mark.django_db
+def test_zip_search_uses_zip_geocoding_and_lists_one_place(client, mocked_responses):
+    mocked_responses.get(
+        GEO_ZIP_URL,
+        json=load_fixture("geo_zip_10001.json"),
+        match=[matchers.query_param_matcher({"zip": "10001,US"}, strict_match=False)],
+    )
+
+    response = search(client, "10001")
+
+    assertContains(response, "<ul")
+    assertContains(response, "<li>", count=1)
+    assertContains(response, "New York, US")
+
+
+@pytest.mark.django_db
+def test_unknown_zip_shows_no_results_found(client, mocked_responses):
+    mocked_responses.get(
+        GEO_ZIP_URL, status=404, json={"cod": "404", "message": "not found"}
+    )
+
+    response = search(client, "00000")
+
+    assert response.status_code == 200
+    assertContains(response, "No results found")
+    assertNotContains(response, "<li>")
+
+
+@pytest.mark.django_db
+def test_letter_first_postcode_with_country_uses_zip_geocoding(
+    client, mocked_responses
+):
+    mocked_responses.get(
+        GEO_ZIP_URL,
+        json={
+            "zip": "SW1A 1AA",
+            "name": "London",
+            "lat": 51.5010,
+            "lon": -0.1416,
+            "country": "GB",
+        },
+        match=[
+            matchers.query_param_matcher({"zip": "SW1A 1AA,GB"}, strict_match=False)
+        ],
+    )
+
+    response = search(client, "SW1A 1AA,GB")
+
+    assertContains(response, "<li>", count=1)
+    assertContains(response, "London, GB")
+
+
+@pytest.mark.django_db
 def test_no_matches_shows_no_results_found(client, mocked_responses):
     mocked_responses.get(GEO_DIRECT_URL, json=[])
 
@@ -103,7 +156,7 @@ def test_blank_query_shows_hint_without_calling_openweather(
     response = search(client, query)
 
     assert response.status_code == 200
-    assertContains(response, "Type a city name to search")
+    assertContains(response, "Type a city name or ZIP code to search")
     assert len(mocked_responses.calls) == 0
 
 
@@ -112,7 +165,7 @@ def test_missing_query_param_shows_hint(client):
     response = client.get(reverse("search"), headers={"HX-Request": "true"})
 
     assert response.status_code == 200
-    assertContains(response, "Type a city name to search")
+    assertContains(response, "Type a city name or ZIP code to search")
 
 
 @pytest.mark.django_db

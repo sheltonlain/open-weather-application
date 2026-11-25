@@ -91,10 +91,10 @@ A single search box on the dashboard that sends `GET /weather/search/?q=` via HT
 
 ### Acceptance criteria
 
-- [ ] `parse_query()` unit tests: city, bare ZIP to US, ZIP with a country code, whitespace handling
-- [ ] A ZIP search calls `/geo/1.0/zip` with `zip=<code>,<country>`
-- [ ] A ZIP that isn't found shows "no results found"
-- [ ] A letter-first postcode with a country code (e.g. `SW1A 1AA,GB`) is documented as needing the country and handled per the PRD
+- [x] `parse_query()` unit tests: city, bare ZIP to US, ZIP with a country code, whitespace handling
+- [x] A ZIP search calls `/geo/1.0/zip` with `zip=<code>,<country>`
+- [x] A ZIP that isn't found shows "no results found"
+- [x] A letter-first postcode with a country code (e.g. `SW1A 1AA,GB`) is documented as needing the country and handled per the PRD
 
 ---
 

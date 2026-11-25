@@ -1,7 +1,8 @@
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
-from weather.services import WeatherServiceError, search_cities
+from weather.queries import parse_query
+from weather.services import WeatherServiceError, search_cities, search_zip
 
 SEARCH_ERROR_MESSAGE = "Search is unavailable right now. Please try again."
 
@@ -12,13 +13,15 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 
 def search(request: HttpRequest) -> HttpResponse:
-    """Search for places by city name."""
+    """Search for places by city name or ZIP/postal code."""
     query = request.GET.get("q", "").strip()
     places = []
     error = None
     if query:
+        parsed = parse_query(query)
+        lookup = search_zip if parsed.kind == "zip" else search_cities
         try:
-            places = search_cities(query)
+            places = lookup(parsed.value)
         except WeatherServiceError:
             error = SEARCH_ERROR_MESSAGE
 

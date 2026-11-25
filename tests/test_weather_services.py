@@ -4,8 +4,8 @@ import pytest
 import requests
 from responses import matchers
 
-from tests.openweather import GEO_DIRECT_URL, load_fixture
-from weather.services import Place, WeatherServiceError, search_cities
+from tests.openweather import GEO_DIRECT_URL, GEO_ZIP_URL, load_fixture
+from weather.services import Place, WeatherServiceError, search_cities, search_zip
 
 
 def test_search_cities_calls_direct_geocoding_and_returns_places(mocked_responses):
@@ -42,13 +42,20 @@ def test_search_cities_calls_direct_geocoding_and_returns_places(mocked_response
         ),
     ],
 )
-def test_search_cities_failure_raises_weather_service_error(
-    mocked_responses, mock_kwargs
+@pytest.mark.parametrize(
+    ("url", "search", "query"),
+    [
+        pytest.param(GEO_DIRECT_URL, search_cities, "London", id="city"),
+        pytest.param(GEO_ZIP_URL, search_zip, "10001,US", id="zip"),
+    ],
+)
+def test_search_failure_raises_weather_service_error(
+    mocked_responses, mock_kwargs, url, search, query
 ):
-    mocked_responses.get(GEO_DIRECT_URL, **mock_kwargs)
+    mocked_responses.get(url, **mock_kwargs)
 
     with pytest.raises(WeatherServiceError):
-        search_cities("London")
+        search(query)
 
 
 def test_search_cities_handles_place_without_state(mocked_responses):
@@ -75,3 +82,25 @@ def test_search_cities_drops_duplicate_places_keeping_first(mocked_responses):
         Place("Paris", "Ile-de-France", "FR", 48.8588897, 2.320041),
         Place("Paris", "Texas", "US", 33.6617962, -95.555513),
     ]
+
+
+def test_search_zip_calls_zip_geocoding_and_returns_one_place(mocked_responses):
+    mocked_responses.get(
+        GEO_ZIP_URL,
+        json=load_fixture("geo_zip_10001.json"),
+        match=[
+            matchers.query_param_matcher(
+                {"zip": "10001,US", "appid": "test-openweather-key"}
+            )
+        ],
+    )
+
+    assert search_zip("10001,US") == [Place("New York", "", "US", 40.7484, -73.9967)]
+
+
+def test_search_zip_not_found_returns_empty_list(mocked_responses):
+    mocked_responses.get(
+        GEO_ZIP_URL, status=404, json={"cod": "404", "message": "not found"}
+    )
+
+    assert search_zip("00000,US") == []

@@ -14,6 +14,10 @@ class WeatherServiceError(Exception):
     """OpenWeather could not be reached or returned an unusable response."""
 
 
+class NotFoundError(WeatherServiceError):
+    """OpenWeather answered 404: the requested place does not exist."""
+
+
 @dataclass(frozen=True)
 class Place:
     """A geocoded location."""
@@ -33,6 +37,8 @@ def _get_json(path: str, params: dict) -> list | dict:
             params={**params, "appid": settings.OPENWEATHER_API_KEY},
             timeout=TIMEOUT_SECONDS,
         )
+        if response.status_code == 404:
+            raise NotFoundError(f"OpenWeather found nothing at {path}")
         response.raise_for_status()
         return response.json()
     except requests.RequestException:
@@ -61,3 +67,20 @@ def search_cities(query: str) -> list[Place]:
             seen.add(label)
             places.append(place)
     return places
+
+
+def search_zip(zip_query: str) -> list[Place]:
+    """Return the place for a "<code>,<country>" ZIP query, or an empty list."""
+    try:
+        item = _get_json("/geo/1.0/zip", {"zip": zip_query})
+    except NotFoundError:
+        return []
+    return [
+        Place(
+            name=item["name"],
+            state="",
+            country=item["country"],
+            lat=item["lat"],
+            lon=item["lon"],
+        )
+    ]

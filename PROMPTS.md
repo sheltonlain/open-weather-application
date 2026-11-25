@@ -28,6 +28,27 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-25 — Phase 4: ZIP search in the same box (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md Implement phase 4`
+2. "Yes" (the three TDD behaviors: `parse_query()` classifies city vs. ZIP, `search_zip()` calls `/geo/1.0/zip` and treats 404 as no results, the search view routes ZIPs; plus the letter-first postcode rule: a ZIP only with a 2-letter country code)
+3. "Yes, implement it" (cycle 1 RED test: `parse_query` table of 9 cases)
+4. "yes, move on to behavior 2"
+5. "Yes, implement it" (cycle 2a RED test: `search_zip("10001,US")` calls `/geo/1.0/zip` and returns one `Place`)
+6. "Yes, implement it" (cycle 2b RED test: a 404 from `/geo/1.0/zip` returns `[]`)
+7. "yes, move on to behavior 3"
+8. "Yes, implement it" (cycle 3 RED test: searching `10001` lists one place, "New York, US")
+9. "yes, go ahead with these" (unknown-ZIP and letter-first view tests, ZIP-aware placeholder and hint text)
+10. "5 results in sw1a 1aa,gb and does not say london. Also pressing enter in the search box does not query the results. You have to physically press search"
+11. "Enter works now, go with option A"
+12. "yes, update CLAUDE.md then commit and push"
+
+### Summary
+- **Outcome:** New pure module `weather/queries.py` with `ParsedQuery` and `parse_query()`: digit-first input is a ZIP (default `US`), a letter-first postcode is a ZIP only with a 2-letter country code, and everything else is a city. `weather/services.py` gained `search_zip()` and a `NotFoundError` subclass of `WeatherServiceError`, raised by `_get_json` on a 404, so an unknown ZIP shows "No results found" instead of the outage message. The search view routes via `parse_query()`. The search box placeholder, aria-label, and blank-query hint now mention ZIPs and the country-code rule; `autocomplete="off"` was added to the input. New fixture `geo_zip_10001.json` and `GEO_ZIP_URL` helper; the failure test now runs against both lookups. 59 tests pass, Ruff clean, all Phase 4 criteria ticked. CLAUDE.md now records the letter-first rule, the ZIP 404 handling, and where `parse_query()` lives.
+- **Deviations:** Claude proposed the letter-first postcode rule because the PRD's "digits first means ZIP" rule alone would have sent `SW1A 1AA,GB` to city search, breaking user story 10; I approved it. For the UK postcode label I chose option A: keep OpenWeather's postcode-as-name ("SW1A 1AA, GB") and leave proper names to Phase 10's reverse geocoding, rather than adding a reverse-geocode call now.
+- **Sideways:** Cycle 1 first failed with `NotImplementedError` rather than an assertion, so the stub was changed to return a placeholder. Cycle 2b's RED was a raised `WeatherServiceError`, not an assertion failure; Claude flagged this and kept it, since it was the real wrong behavior rather than missing scaffolding. Manual step 5 wrongly promised that `SW1A 1AA,GB` would show "London"; calling the real API showed OpenWeather names full UK postcodes after the postcode itself. The "5 results" I reported could not be reproduced on the server (the real view returned one item); Claude's best explanation was the browser's autofill dropdown on the `type="search"` input, which would also explain Enter not submitting. Adding `autocomplete="off"` fixed Enter, but the root cause was never confirmed. Ruff reformatted one long test line. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-25 — Phase 3: city search to results list (TDD)
 
 ### Prompts

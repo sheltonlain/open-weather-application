@@ -19,7 +19,7 @@ Open Weather App: an educational Django web app giving users current weather, mu
 ```
 config/            # settings, root urls
 accounts/          # custom User (units field), register/login/settings
-weather/           # services.py (OpenWeather client), units.py, search/weather views
+weather/           # services.py (OpenWeather client), units.py, queries.py (parse_query), search/weather views
 favorites/         # Favorite model, add/remove/list views
 templates/         # base.html + per-app full pages and partials/
 tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
@@ -28,7 +28,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 ## 4. Dependency Rules
 - **Layering (one direction only):** templates ← views → services/forms/models. Views orchestrate; business logic lives in services or pure helper modules.
 - **Only `weather/services.py` talks to OpenWeather.** No other module imports `requests` or builds OpenWeather URLs.
-- Models never call services or external APIs. Pure helpers (`weather/units.py`, `parse_query()`) have no Django or network imports.
+- Models never call services or external APIs. Pure helpers (`weather/units.py`, `weather/queries.py::parse_query()`) have no Django or network imports.
 - `favorites` may import from `weather` services; `weather` must not import from `favorites` or `accounts` models (read `request.user` only).
 - **Packages:** add only with `uv add`. Do not add packages beyond the stack above without asking. Never add Node/npm, bundlers, or SPA frameworks. Never commit hand-edited lockfiles.
 
@@ -37,7 +37,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 2. **OpenWeather client:** Use a 5s timeout; raise `WeatherServiceError` on failure and show a friendly message.
 3. **Units:** Always fetch `units=metric`; convert to imperial in `weather/units.py` (pure functions).
 4. **Caching:** Django local-memory cache, 10 min TTL, key = endpoint + lat/lon rounded to 4 decimals.
-5. **Search:** One box. `parse_query()` treats input starting with digits as ZIP (default country `US`, e.g. `10001,US`); otherwise city via `/geo/1.0/direct`. Always show results as a list (name, state, country) with a save button.
+5. **Search:** One box. `parse_query()` treats input starting with digits as ZIP (default country `US`, e.g. `10001,US`); a letter-first postcode is a ZIP only with a 2-letter country code (e.g. `SW1A 1AA,GB`); otherwise city via `/geo/1.0/direct`. ZIPs use `/geo/1.0/zip`; its 404 means "no results", not a service error. Always show results as a list (name, state, country) with a save button.
 6. **Geolocation:** If browser permission is already granted, auto-detect; else show a "Use my location" button. Fallback: first favorite or the search box. Reverse-geocode on the backend.
 7. **Forecast:** Group 3-hour steps into daily high/low/condition in `services.py`; render with Chart.js via `json_script`.
 8. **Map:** Leaflet + OpenStreetMap tiles with weather markers (selected location + favorites). No weather tile overlays.

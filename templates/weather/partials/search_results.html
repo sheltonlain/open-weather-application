@@ -2,7 +2,10 @@
   {% if error %}
   <div role="alert" class="alert alert-warning">{{ error }}</div>
   {% elif not query %}
-  <p class="text-base-content/70">Type a city name to search.</p>
+  <p class="text-base-content/70">
+    Type a city name or ZIP code to search. For postcodes outside the US, add a
+    country code, e.g. <code>SW1A 1AA,GB</code>.
+  </p>
   {% elif places %}
   <ul class="menu w-full rounded-box bg-base-200">
     {% for place in places %}

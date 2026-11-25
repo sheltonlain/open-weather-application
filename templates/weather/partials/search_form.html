@@ -10,8 +10,9 @@
     type="search"
     name="q"
     value="{{ query|default:'' }}"
-    placeholder="City name, e.g. Paris"
-    aria-label="Search for a city"
+    placeholder="City or ZIP, e.g. Paris or 10001"
+    aria-label="Search for a city or ZIP code"
+    autocomplete="off"
     class="input join-item w-full"
   >
   <button type="submit" class="btn btn-primary join-item">Search</button>
