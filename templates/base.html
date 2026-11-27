@@ -7,6 +7,10 @@
   {% tailwind_css %}
   {% htmx_script %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body class="min-h-screen bg-base-200" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <header class="navbar bg-base-100 shadow-sm">
@@ -70,6 +74,67 @@
     }
     document.addEventListener("DOMContentLoaded", drawForecastChart);
     document.body.addEventListener("htmx:afterSettle", drawForecastChart);
+
+    // Draw the weather map from the marker data the server put in the page.
+    // Text is set with textContent, so place names are never treated as HTML.
+    let weatherMap = null;
+
+    function weatherPopup(marker) {
+      const popup = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = marker.label;
+      popup.append(title);
+      const lines = marker.temp === null
+        ? ["Weather unavailable"]
+        : [
+            marker.emoji + " " + marker.description,
+            "Temperature: " + marker.temp + marker.unit,
+            "Humidity: " + marker.humidity + "%",
+            "Wind: " + marker.wind + " " + marker.speed_unit,
+          ];
+      for (const text of lines) {
+        const line = document.createElement("div");
+        line.textContent = text;
+        popup.append(line);
+      }
+      return popup;
+    }
+
+    function addWeatherMarker(marker, badgeClass) {
+      const badge = document.createElement("span");
+      badge.className = "badge " + badgeClass + " shadow whitespace-nowrap -translate-x-1/2 -translate-y-1/2";
+      badge.textContent = marker.temp === null
+        ? "❔ " + marker.label
+        : marker.emoji + " " + Math.round(marker.temp) + marker.unit;
+      const icon = L.divIcon({ html: badge, className: "", iconSize: null });
+      return L.marker([marker.lat, marker.lon], { icon: icon, title: marker.label })
+        .bindPopup(weatherPopup(marker))
+        .addTo(weatherMap);
+    }
+
+    function drawWeatherMap() {
+      const container = document.querySelector("[data-weather-map]");
+      const dataTag = document.getElementById("weather-map-data");
+      // A swap elsewhere (e.g. the favorites list) leaves the current map alone.
+      if (weatherMap && weatherMap.getContainer() === container) return;
+      if (weatherMap) {
+        weatherMap.remove();
+        weatherMap = null;
+      }
+      if (!container || !dataTag || !window.L) return;
+      const data = JSON.parse(dataTag.textContent);
+      weatherMap = L.map(container).setView([data.selected.lat, data.selected.lon], 10);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(weatherMap);
+      for (const favorite of data.favorites) {
+        addWeatherMarker(favorite, "badge-neutral");
+      }
+      addWeatherMarker(data.selected, "badge-primary").setZIndexOffset(1000);
+    }
+    document.addEventListener("DOMContentLoaded", drawWeatherMap);
+    document.body.addEventListener("htmx:afterSettle", drawWeatherMap);
   </script>
 </body>
 </html>

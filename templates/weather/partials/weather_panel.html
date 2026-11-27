@@ -75,6 +75,14 @@
       {{ forecast_chart|json_script:"forecast-chart-data" }}
       {% endif %}
     </section>
+    <section class="mt-4">
+      <h3 class="text-lg font-semibold">Map</h3>
+      {# "relative z-0" keeps Leaflet's layers below the page's menus. #}
+      {# No id on purpose: HTMX "settles" attributes of elements whose id matches #}
+      {# the old panel's, which would strip Leaflet's classes after a swap. #}
+      <div data-weather-map class="relative z-0 h-80 mt-2 rounded-box" role="region" aria-label="Map around {{ place.label }}"></div>
+      {{ map_data|json_script:"weather-map-data" }}
+    </section>
     {% else %}
     <h2 class="card-title">Weather</h2>
     <p class="text-base-content/70">Pick a place to see its weather.</p>

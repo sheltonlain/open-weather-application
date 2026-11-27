@@ -28,6 +28,26 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 9: map with selected and favorite markers (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md implement phase 9`
+2. "Yes" (the three TDD behaviors: selected marker data in the active units, favorite markers only for the current user, one failing favorite doesn't break the map)
+3. "yes, make it pass" (cycle 1 RED test: the selected marker's JSON for an imperial user)
+4. "yes, go ahead with cycle 2"
+5. "yes, make it pass" (cycle 2 RED test: only Alice's favorites, none for anonymous)
+6. "yes, go ahead with cycle 3"
+7. "yes, keep the marker and make it pass" (cycle 3 RED test: a failed favorite keeps a marker with `temp: None`)
+8. "yes, go ahead with the rest of the phase"
+9. "when I switch to farenheit, the map does not load"
+10. "manual verification passed, go ahead with the acceptance criteria"
+11. "Yes" (add two CLAUDE.md lines, then PROMPTS.md, commit, and push)
+
+### Summary
+- **Outcome:** The weather panel now includes a Leaflet 1.9.4 map (pinned CDN with SRI hashes, OpenStreetMap tiles, no OpenWeather overlays). `weather/views.py` builds `map_data` (emitted via `json_script` as `weather-map-data`): a selected marker (label, lat/lon, temp, emoji, description, humidity, wind, unit labels, all in the active units) and markers for the logged-in user's favorites, read through `request.user.favorites` with weather from the cached service. A favorite whose weather fails keeps a `{label, lat, lon, temp: None}` marker; a favorite at the selected spot is skipped; no map or favorite calls when the selected weather fails. `drawWeatherMap()` in `base.html` draws DaisyUI badge markers and `textContent`-built popups, on load and after HTMX swaps, leaving the map alone on unrelated swaps. New `tests/test_map.py` (7 tests); 156 pass, Ruff clean, all Phase 9 criteria ticked. CLAUDE.md §5.9 and §5.10 each gained a line.
+- **Deviations:** Claude asked whether a favorite with failed weather should keep its marker or be dropped, recommending keeping it; I chose to keep it. The weather view reading `request.user.favorites` stretched CLAUDE.md's "in templates" wording; Claude flagged it up front and the wording was updated at the end.
+- **Sideways:** Cycle 3 first crashed with an exception instead of failing an assertion; the test switched to `Client(raise_request_exception=False)` and checked the status before parsing (mechanical, assertions unchanged). The cache test first failed because the forecast was unmocked and retried; it now mocks the forecast. Manual verification found the map blank (no tiles) after switching to °F on the dashboard. Claude reproduced it in headless Edge over CDP: HTMX's attribute settling on the id-matched `#weather-map` stripped Leaflet's classes when the units toggle's `afterSettle` drew the map inside the panel's settle window. The fix was to drop the id and use `data-weather-map`; the two selector tests were updated. The forecast canvas still uses an id and wasn't changed. `requirements.md` is still untracked.
+
 ## 2026-11-26 — Phase 8 follow-up: save a pending favorite after login
 
 ### Prompts

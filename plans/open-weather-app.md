@@ -183,11 +183,11 @@ A Leaflet map with OpenStreetMap tiles in the weather panel, centered on the sel
 
 ### Acceptance criteria
 
-- [ ] The map centers on the selected location and supports pan/zoom
-- [ ] The selected marker shows the temperature and icon, and its popup shows key details in the active units
-- [ ] Favorites appear as markers for logged-in users only, and only that user's favorites
-- [ ] Favorite weather uses the cached service; a failure for one favorite doesn't break the map
-- [ ] No OpenWeather URLs or API key appear in the page source or browser requests
+- [x] The map centers on the selected location and supports pan/zoom
+- [x] The selected marker shows the temperature and icon, and its popup shows key details in the active units
+- [x] Favorites appear as markers for logged-in users only, and only that user's favorites
+- [x] Favorite weather uses the cached service; a failure for one favorite doesn't break the map
+- [x] No OpenWeather URLs or API key appear in the page source or browser requests
 
 ---
 

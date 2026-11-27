@@ -3,6 +3,7 @@ from django.shortcuts import render
 
 from weather.queries import parse_query
 from weather.services import (
+    CurrentWeather,
     DailyForecast,
     Place,
     WeatherServiceError,
@@ -74,6 +75,61 @@ def _forecast_chart_data(forecast: list[DailyForecast], temp_unit: str) -> dict:
     }
 
 
+def _map_marker(place: Place, weather: CurrentWeather, units: str) -> dict:
+    """Return one map marker's data, with weather already in display units."""
+    return {
+        "label": place.label,
+        "lat": place.lat,
+        "lon": place.lon,
+        "temp": round(weather.temp, 1),
+        "unit": TEMP_LABELS[units],
+        "emoji": weather.emoji,
+        "description": weather.description,
+        "humidity": weather.humidity,
+        "wind": round(weather.wind_speed, 1),
+        "speed_unit": SPEED_LABELS[units],
+    }
+
+
+def _same_spot(a: Place, b: Place) -> bool:
+    """Return True if two places round to the same 4-decimal coordinates."""
+    return (round(a.lat, 4), round(a.lon, 4)) == (round(b.lat, 4), round(b.lon, 4))
+
+
+def _favorite_markers(request: HttpRequest, selected: Place, units: str) -> list[dict]:
+    """Return map markers for the user's own favorites, except the selected one."""
+    if not request.user.is_authenticated:
+        return []
+    # Read favorites through the user, so weather never imports the model.
+    markers = []
+    for favorite in request.user.favorites.all():
+        place = favorite.place
+        if _same_spot(place, selected):
+            continue  # the selected marker already shows this place
+        try:
+            weather = get_current_weather(place.lat, place.lon).in_units(units)
+        except WeatherServiceError:
+            # Keep the marker so the place still shows, just without weather.
+            markers.append(
+                {"label": place.label, "lat": place.lat, "lon": place.lon, "temp": None}
+            )
+            continue
+        markers.append(_map_marker(place, weather, units))
+    return markers
+
+
+def _map_data(
+    request: HttpRequest, place: Place, weather: CurrentWeather | None, units: str
+) -> dict | None:
+    """Return the map's markers, or None when there is no weather to map."""
+    if weather is None:
+        return None
+    return {
+        "selected": _map_marker(place, weather, units),
+        "favorites": _favorite_markers(request, place, units),
+    }
+
+
 def weather_panel(request: HttpRequest) -> HttpResponse:
     """Show current weather for the lat/lon given in the query string."""
     template = "weather/partials/weather_panel.html"
@@ -114,12 +170,14 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
 
     units = active_units(request)
     forecast = [day.in_units(units) for day in forecast]
+    weather = weather.in_units(units) if weather else None
     context = {
-        "weather": weather.in_units(units) if weather else None,
+        "weather": weather,
         "error": error,
         "forecast": forecast,
         "forecast_chart": _forecast_chart_data(forecast, TEMP_LABELS[units]),
         "forecast_error": forecast_error,
+        "map_data": _map_data(request, place, weather, units),
         "place": place,
         "temp_unit": TEMP_LABELS[units],
         "speed_unit": SPEED_LABELS[units],
