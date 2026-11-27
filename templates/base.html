@@ -253,11 +253,13 @@
         const removeUrl = removeUrls.get(key(button));
         if (removeUrl) {
           button.dataset.removeUrl = removeUrl;
+          button.classList.replace("btn-outline", "btn-warning");
           button.textContent = "★ Saved";
           button.title = "Remove from favorites";
           button.setAttribute("aria-label", "Remove " + button.dataset.label + " from favorites");
         } else {
           delete button.dataset.removeUrl;
+          button.classList.replace("btn-warning", "btn-outline");
           button.textContent = "☆ Save";
           button.title = "";
           button.setAttribute("aria-label", "Save " + button.dataset.label + " to favorites");

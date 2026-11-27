@@ -134,3 +134,15 @@ def test_dashboard_without_a_default_has_no_default_url(client):
     response = client.get(reverse("dashboard"))
 
     assertNotContains(response, "data-default-url")
+
+
+@pytest.mark.django_db
+def test_default_favorite_is_labeled_in_the_sidebar(client):
+    user = UserFactory()
+    FavoriteFactory(user=user, name="Home", is_default=True)
+    FavoriteFactory(user=user, name="Other")
+    client.force_login(user)
+
+    response = client.get(reverse("favorites"), headers=HTMX)
+
+    assertContains(response, ">Default</span>", count=1)

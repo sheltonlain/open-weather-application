@@ -16,7 +16,10 @@
         hx-target="#weather-panel"
         hx-swap="outerHTML"
         hx-indicator="#weather-panel"
-      >{{ favorite.place.label }}</a>
+      >
+        {{ favorite.place.label }}
+        {% if favorite.is_default %}<span class="badge badge-primary badge-xs">Default</span>{% endif %}
+      </a>
       {# Loads this favorite's current weather; a sibling of the link, so it #}
       {# doesn't inherit the link's #weather-panel target. #}
       <span
@@ -29,7 +32,7 @@
       {% if favorite.is_default %}
       <button
         type="button"
-        class="btn btn-ghost btn-xs"
+        class="btn btn-primary btn-xs"
         aria-pressed="true"
         aria-label="{{ favorite.place.label }} is your default location; clear it"
         title="Default location (click to clear)"
@@ -40,7 +43,7 @@
       {% else %}
       <button
         type="button"
-        class="btn btn-ghost btn-xs opacity-30 hover:opacity-100 focus-visible:opacity-100"
+        class="btn btn-ghost btn-xs"
         aria-pressed="false"
         aria-label="Make {{ favorite.place.label }} your default location"
         title="Make this your default location"
@@ -60,6 +63,7 @@
     </li>
     {% endfor %}
   </ul>
+  <p class="mt-2 text-xs text-base-content/60">Click 🏠 to open the app on that place.</p>
   {% else %}
   <p class="text-base-content/70">No favorites yet. Use "Save" on a place to add it.</p>
   {% endif %}
