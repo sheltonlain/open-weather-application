@@ -143,13 +143,25 @@
     // the user clicks "Use my location"; if it was granted before, it runs
     // silently on page load. On denial or error it falls back to the first
     // favorite, or shows a hint pointing at the search box.
+    // If the user picks a place (search result, favorite) while the browser is
+    // still finding the position, their choice wins and the lookup is ignored.
     function setUpGeolocation() {
       const box = document.querySelector("[data-geolocation]");
       if (!box) return;
       const button = box.querySelector("[data-geolocation-button]");
       const hint = box.querySelector("[data-geolocation-hint]");
 
+      // Becomes true as soon as any request for the weather panel starts,
+      // even one whose response hasn't arrived yet.
+      let userPickedPlace = false;
+      document.body.addEventListener("htmx:beforeRequest", (event) => {
+        if (event.detail.target && event.detail.target.id === "weather-panel") {
+          userPickedPlace = true;
+        }
+      });
+
       function loadPanel(url) {
+        if (userPickedPlace) return; // don't replace the place the user chose
         htmx.ajax("GET", url, { target: "#weather-panel", swap: "outerHTML" });
       }
 
@@ -172,6 +184,9 @@
       }
 
       function locate() {
+        // A new lookup starts fresh: clicking the button should replace
+        // whatever panel is showing once the position arrives.
+        userPickedPlace = false;
         navigator.geolocation.getCurrentPosition(onPosition, onFailure, {
           timeout: 10000,
           maximumAge: 10 * 60 * 1000,
