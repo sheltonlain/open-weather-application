@@ -2,7 +2,8 @@
 
 import json
 import re
-from datetime import date
+from datetime import date, time
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
@@ -10,9 +11,12 @@ from pytest_django.asserts import assertContains, assertNotContains
 
 from tests.factories import UserFactory
 from tests.openweather import FORECAST_URL, GEO_REVERSE_URL, WEATHER_URL, load_fixture
-from weather.services import DailyForecast, get_daily_forecast
+from weather.services import CurrentWeather, DailyForecast, get_daily_forecast
 
 NEW_YORK = (40.7484, -73.9967)
+CURRENT = CurrentWeather(
+    "New York", "US", "clear sky", "01d", 5.0, 4.0, 50, 2.0, 0, 1015, time(7), time(17)
+)
 DAY_LABELS = ["Thu 26 Nov", "Fri 27 Nov", "Sat 28 Nov", "Sun 29 Nov", "Mon 30 Nov"]
 
 
@@ -185,3 +189,28 @@ def test_forecast_uses_the_cache_and_never_leaks_the_api_key(client, mocked_resp
     for response in (first, second):
         assertNotContains(response, "test-openweather-key")
         assertNotContains(response, "openweathermap.org")
+
+
+@pytest.mark.django_db
+def test_each_day_has_a_bar_on_the_weeks_temperature_scale(client, mocked_responses):
+    mock_new_york(mocked_responses)
+
+    response = get_panel(client)
+
+    # The week spans -1.2 to 8.3 °C (9.5 degrees). Bars are SVG rects in
+    # percent: x = (low - week low) / span, width = (high - low) / span.
+    assertContains(response, 'x="37.9" width="56.8"')  # 26 Nov: 2.4 to 7.8
+    assertContains(response, 'x="21.1" width="78.9"')  # 27 Nov: 0.8 to 8.3
+    assertContains(response, 'x="0.0" width="49.5"')  # 30 Nov: -1.2 to 3.5
+
+
+@pytest.mark.django_db
+def test_days_with_the_same_temperature_all_get_full_bars(client):
+    days = [DailyForecast(date(2026, 11, 26), 5.0, 5.0, "clear sky", "01d")]
+    with (
+        patch("weather.views.get_current_weather", return_value=CURRENT),
+        patch("weather.views.get_daily_forecast", return_value=days),
+    ):
+        response = get_panel(client)
+
+    assertContains(response, 'x="0.0" width="100.0"')

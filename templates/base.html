@@ -53,14 +53,16 @@
         data: {
           labels: data.labels,
           datasets: [
-            { label: "High (" + data.unit + ")", data: data.highs, borderColor: "#ef4444", backgroundColor: "#ef4444", tension: 0.3 },
-            { label: "Low (" + data.unit + ")", data: data.lows, borderColor: "#3b82f6", backgroundColor: "#3b82f6", tension: 0.3 },
+            // fill: "+1" shades the band between this line and the next (Low).
+            { label: "High (" + data.unit + ")", data: data.highs, borderColor: "#ef4444", pointBackgroundColor: "#ef4444", backgroundColor: "rgba(239, 68, 68, 0.12)", fill: "+1", tension: 0.3 },
+            { label: "Low (" + data.unit + ")", data: data.lows, borderColor: "#3b82f6", pointBackgroundColor: "#3b82f6", backgroundColor: "#3b82f6", tension: 0.3 },
           ],
         },
         options: {
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
           plugins: {
+            legend: { labels: { usePointStyle: true } },
             tooltip: {
               callbacks: {
                 label: (item) => item.dataset.label.split(" ")[0] + ": " + item.formattedValue + data.unit,
@@ -68,7 +70,10 @@
               },
             },
           },
-          scales: { y: { title: { display: true, text: data.unit } } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { ticks: { callback: (value) => value + "°" } },
+          },
         },
       });
     }
