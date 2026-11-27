@@ -38,7 +38,7 @@
   </header>
   <main class="container mx-auto p-4">
     {% for message in messages %}
-    <div role="status" class="alert alert-success mb-4">{{ message }}</div>
+    <div data-flash role="status" class="alert alert-success mb-4">{{ message }}</div>
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
@@ -285,6 +285,26 @@
     }
     document.addEventListener("DOMContentLoaded", markFavorites);
     document.body.addEventListener("htmx:afterSettle", markFavorites);
+
+    // Banners ("Saved …", "already in your favorites") belong to the place
+    // they were about, so clear them when the user picks another place.
+    // Automatic loads (default location, current position) pass the panel
+    // itself as their source and leave banners alone, so a flash shown right
+    // after login stays readable.
+    function clearBanners() {
+      for (const banner of document.querySelectorAll("[data-flash]")) {
+        banner.remove();
+      }
+    }
+    document.body.addEventListener("htmx:beforeRequest", (event) => {
+      const target = event.detail.target;
+      if (target && target.id === "weather-panel" && event.detail.elt !== target) {
+        clearBanners();
+      }
+    });
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-geolocation-button]")) clearBanners();
+    });
 
     // Clicking "★ Saved" removes the favorite instead of saving it again, and
     // the card's 🏠 button sets or clears the default. Each request's source

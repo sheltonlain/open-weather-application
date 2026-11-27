@@ -353,9 +353,34 @@ def test_invalid_save_while_logged_out_is_not_kept(client):
     assert not Favorite.objects.exists()
 
 
+# --- Dismissing banners -----------------------------------------------------
+# A script in base.html removes every [data-flash] banner when the user picks
+# another place, so an old "Saved" message doesn't linger.
+FLASH_BANNER = '<div data-flash role="status"'
+
+
+@pytest.mark.django_db
+def test_sidebar_save_banner_is_dismissable(client):
+    client.force_login(UserFactory())
+
+    response = client.post(reverse("favorites"), LONDON, headers=HTMX)
+
+    assertContains(response, FLASH_BANNER, count=1, status_code=201)
+
+
+@pytest.mark.django_db
+def test_page_flash_banner_is_dismissable(client):
+    client.force_login(UserFactory())
+
+    response = client.post(reverse("favorites"), LONDON, follow=True)
+
+    assertContains(response, "to your favorites.")
+    assertContains(response, FLASH_BANNER, count=1)
+
+
 # --- Marking saved and selected places --------------------------------------
 # A script in base.html matches these rounded coordinates to highlight the
-# favorite being viewed and to show "★ Saved" on buttons for saved places.
+# favorite being viewed and to show "â˜… Saved" on buttons for saved places.
 
 
 @pytest.mark.django_db
@@ -396,7 +421,7 @@ def test_weather_panel_marks_the_place_shown(client, mocked_responses):
 
 @pytest.mark.django_db
 def test_favorite_links_carry_their_remove_url(client):
-    # Clicking "★ Saved" on a save button removes the favorite via this URL.
+    # Clicking "â˜… Saved" on a save button removes the favorite via this URL.
     user = UserFactory()
     favorite = FavoriteFactory(user=user)
     client.force_login(user)
