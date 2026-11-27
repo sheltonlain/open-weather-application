@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{# Pages that show favorites: the main column plus the sliding sidebar. #}
+{# Wide screens put the sidebar on the right; small screens stack it below. #}
+{% block content %}
+<div class="flex flex-col gap-4 lg:flex-row lg:items-start">
+  <section class="min-w-0 flex-1 space-y-4">
+    {% block main %}{% endblock %}
+  </section>
+  {% include "favorites/partials/sidebar.html" %}
+</div>
+{% endblock %}

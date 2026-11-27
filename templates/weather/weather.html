@@ -1,12 +1,7 @@
-{% extends "base.html" %}
+{% extends "favorites/sidebar_layout.html" %}
 
 {% block title %}Weather · Open Weather App{% endblock %}
 
-{% block content %}
-<div class="grid gap-4 lg:grid-cols-4">
-  <section class="lg:col-span-3">
-    {% include "weather/partials/weather_panel.html" %}
-  </section>
-  {% include "favorites/partials/sidebar.html" %}
-</div>
+{% block main %}
+{% include "weather/partials/weather_panel.html" %}
 {% endblock %}

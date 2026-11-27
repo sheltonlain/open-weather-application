@@ -1,16 +1,49 @@
-<aside id="favorites" class="card bg-base-100 shadow">
-  <div class="card-body">
-    <h2 class="card-title">Favorites</h2>
-    {% if user.is_authenticated %}
-    {% include "favorites/partials/favorites_list.html" with favorites=user.favorites.all %}
-    {% else %}
-    {# Save buttons target this list; anonymous saves are sent to login. #}
-    <div id="favorites-list">
-      <p class="text-base-content/70">
-        <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="link">Log in</a>
-        to save places and switch between them.
-      </p>
+{# On wide screens the toggle slides the sidebar in and out (base.html script). #}
+{# Collapsed, it shrinks to a strip holding only the toggle; the page widens. #}
+{# Its body stays in the page (hidden), so save buttons can still target it. #}
+<aside
+  id="favorites"
+  data-sidebar
+  class="group/sidebar shrink-0 lg:w-80 lg:transition-[width] lg:duration-300 lg:ease-in-out lg:data-[collapsed]:w-14"
+>
+  <div class="card bg-base-100 shadow lg:overflow-hidden">
+    <div class="card-body lg:w-80 lg:transition-[padding] lg:duration-300 lg:group-data-[collapsed]/sidebar:px-3">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          data-sidebar-toggle
+          class="btn btn-ghost btn-sm btn-square hidden lg:inline-flex"
+          aria-controls="favorites-body"
+          aria-expanded="true"
+          aria-label="Hide favorites"
+          title="Hide favorites"
+        >
+          <span aria-hidden="true" class="lg:group-data-[collapsed]/sidebar:hidden">»</span>
+          <span aria-hidden="true" class="hidden lg:group-data-[collapsed]/sidebar:inline">«</span>
+        </button>
+        <h2 class="card-title lg:group-data-[collapsed]/sidebar:invisible">Favorites</h2>
+      </div>
+      <div id="favorites-body" class="lg:group-data-[collapsed]/sidebar:invisible">
+        {% if user.is_authenticated %}
+        {% include "favorites/partials/favorites_list.html" with favorites=user.favorites.all %}
+        {% else %}
+        {# Save buttons target this list; anonymous saves are sent to login. #}
+        <div id="favorites-list">
+          <p class="text-base-content/70">
+            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="link">Log in</a>
+            to save places and switch between them.
+          </p>
+        </div>
+        {% endif %}
+      </div>
     </div>
-    {% endif %}
   </div>
 </aside>
+{# Apply the remembered state right away, so the page doesn't open and then slide shut. #}
+<script>
+  try {
+    if (localStorage.getItem("favoritesSidebarCollapsed") === "true") {
+      document.getElementById("favorites").setAttribute("data-collapsed", "");
+    }
+  } catch (error) {} // storage blocked: start open
+</script>

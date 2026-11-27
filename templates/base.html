@@ -159,6 +159,37 @@
     document.addEventListener("DOMContentLoaded", drawWeatherMap);
     document.body.addEventListener("htmx:afterSettle", drawWeatherMap);
 
+    // Slide the favorites sidebar in and out (wide screens only). The choice
+    // is remembered in this browser; sidebar.html applies it on page load.
+    const SIDEBAR_KEY = "favoritesSidebarCollapsed";
+
+    function showSidebarState(sidebar) {
+      const collapsed = sidebar.hasAttribute("data-collapsed");
+      const button = sidebar.querySelector("[data-sidebar-toggle]");
+      const label = collapsed ? "Show favorites" : "Hide favorites";
+      button.setAttribute("aria-expanded", !collapsed);
+      button.setAttribute("aria-label", label);
+      button.title = label;
+    }
+
+    function setUpSidebar() {
+      const sidebar = document.querySelector("[data-sidebar]");
+      if (!sidebar) return;
+      showSidebarState(sidebar);
+      sidebar.querySelector("[data-sidebar-toggle]").addEventListener("click", () => {
+        const collapsed = sidebar.toggleAttribute("data-collapsed");
+        showSidebarState(sidebar);
+        try {
+          localStorage.setItem(SIDEBAR_KEY, collapsed);
+        } catch (error) {} // storage blocked: the choice lasts until reload
+      });
+      // The map's column changed width; Leaflet must re-measure it.
+      sidebar.addEventListener("transitionend", (event) => {
+        if (event.target === sidebar && weatherMap) weatherMap.invalidateSize();
+      });
+    }
+    document.addEventListener("DOMContentLoaded", setUpSidebar);
+
     // Load weather for the browser's position. Only asks for permission when
     // the user clicks "Use my location"; if it was granted before, it runs
     // silently on page load. On denial or error it falls back to the first
