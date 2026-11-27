@@ -28,6 +28,48 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — UI redesign, favorites polish, and default location
+
+### Prompts
+1. "Let's talk about UI changes we can make to have our website look better. What are your suggestions?"
+2. "Let's start with 1, 2, and 3" (weather-first search, card grid, condition-colored summary card)
+3. "Proceed with item 5. Can we also make it so that after you search and select a city, the search results are no longer displayed?"
+4. "I don't think we need a dark mode. What is the next step after that?"
+5. "Go ahead with all three parts of 6" (favorite temperatures, highlight the viewed favorite, "★ Saved")
+6. "What is included in item 7?"
+7. "Go ahead with all of them. I also want to make it so that you can select a default location"
+8. "Default location (Recommended)" and "Sidebar button (Recommended)" (answers to: does the default beat auto-detect, and where is it set)
+9. "make the saved star toggle to remove the favorite. I don't like the 5-day forecast. Can we go back to how it was before?"
+10. "List without bars" and "Keep chart changes" (answers to: which forecast version, and whether to undo the chart polish)
+11. "the saved toggle works, but its not very visible. I also do not see the place to save a default location"
+12. Rejected Claude's headless-Edge screenshot command, then: "what are the other options"
+13. "Go with your recommendations, I'll check it myself"
+14. "I like the save toggle button, but sometimes the background on the location card is dark, so the save button does not show up well. It looks great on light cards. How can we fix this?"
+15. "Great, can we add the default location save to the card similary to the favorite save? Having it just in the sidebar where the favorites are is easy for users to miss."
+16. "Update CLAUDE.md with any relevant information that cannot be obtained easily and update PROMPTS.md"
+
+### Summary
+- **Outcome:** 13 commits (`33bdbf6` to `9c83b75`), 201 tests pass, Ruff clean, not pushed.
+  - **Dashboard:** large search bar at the top, with results that clear once a place is picked. The weather panel is split into a condition-colored summary card (`weather_theme()` in `services.py`), six detail tiles, and the forecast list and map side by side. The panel dims with a spinner while loading, and the search button shows a spinner.
+  - **Favorites:** each favorite shows its current weather via `GET /weather/badge/`. The viewed favorite is highlighted. "☆ Save" / "★ Saved" is a toggle that removes the favorite, solid yellow when saved and light on dark cards.
+  - **Default location:** `Favorite.is_default` (one per user, migration `0002`), `POST`/`DELETE /favorites/<id>/default/`, set from a 🏠 button in the sidebar and a "🏠 Make default" button on the summary card. The dashboard opens on the default even when location access is granted.
+  - **Other UI:** shaded high/low band on the chart, a welcome empty state, centered account pages, and a ☰ menu on small screens.
+  - **CLAUDE.md:** updated rules for default location, `markFavorites()` attribute matching, HTMX attribute inheritance, loading-state variants, summary-card themes, the reserved `data-default-url` name, and the rejected range bars and dark mode.
+- **Deviations:**
+  - Skipped the recommended dark mode.
+  - Forecast range bars were built and then reverted at my request; the list layout and chart polish were kept.
+  - Asked for the "★ Saved" button to toggle removal instead of being disabled.
+  - Chose the sidebar for setting the default, then asked for a summary-card button too because the sidebar one was easy to miss.
+  - Declined Claude's screenshot check and verified the UI myself.
+  - Claude changed two item-7 plans: it left "Use my location" out of the welcome card (moving it would break the geolocation script) and dropped a "Today" label (the first forecast day isn't always today at the place).
+- **Sideways:**
+  - The first 🏠 button sat at 30% opacity, so I couldn't find it. The "☆ Save" outline was invisible on dark cards until those cards got DaisyUI's `data-theme="dark"`.
+  - The card's 🏠 button first reused the attribute name `data-default-url`, which broke an existing geolocation test. Claude renamed it rather than change the test.
+  - Claude's screenshot helper had a path-quoting bug that wrote a stray `shots$1.png` into its scratchpad before I stopped it.
+  - The search hint stayed (just smaller) because existing tests check for it.
+  - Claude did not check any of the UI in a browser. The click-driven JavaScript (toggles, highlighting, clearing results) has no automated tests; only the HTML attributes it reads are tested.
+  - `requirements.md` is still untracked and was left out of every commit.
+
 ## 2026-11-26 — Phase 10 follow-up: geolocation search-result race
 
 ### Prompts
