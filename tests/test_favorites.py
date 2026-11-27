@@ -392,3 +392,16 @@ def test_weather_panel_marks_the_place_shown(client, mocked_responses):
     assertContains(
         response, 'data-selected-place data-lat="40.7484" data-lon="-73.9967"'
     )
+
+
+@pytest.mark.django_db
+def test_favorite_links_carry_their_remove_url(client):
+    # Clicking "★ Saved" on a save button removes the favorite via this URL.
+    user = UserFactory()
+    favorite = FavoriteFactory(user=user)
+    client.force_login(user)
+
+    response = client.get(reverse("favorites"), headers=HTMX)
+
+    url = reverse("remove_favorite", args=[favorite.pk])
+    assertContains(response, f'data-remove-url="{url}"')

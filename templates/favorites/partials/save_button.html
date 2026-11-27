@@ -11,7 +11,8 @@
   <input type="hidden" name="country" value="{{ place.country }}">
   <input type="hidden" name="lat" value="{{ place.lat }}">
   <input type="hidden" name="lon" value="{{ place.lon }}">
-  {# base.html's markFavorites() turns this into "★ Saved" when the place is a favorite. #}
+  {# base.html's markFavorites() turns this into "★ Saved" when the place is a #}
+  {# favorite; clicking "★ Saved" then removes it instead of submitting. #}
   <button
     type="submit"
     data-save-button data-lat="{{ place.lat|floatformat:4 }}" data-lon="{{ place.lon|floatformat:4 }}"

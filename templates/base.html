@@ -236,30 +236,50 @@
     }
     document.addEventListener("DOMContentLoaded", setUpGeolocation);
 
-    // Highlight the favorite being viewed and show "★ Saved" on save buttons
-    // for places that are already favorites. Favorites, save buttons and the
-    // weather panel carry coordinates rounded to 4 decimals (data-lat/lon), so
-    // equal strings mean the same place. Runs after every swap, so it stays
-    // right after saving, removing or picking a place.
+    // Highlight the favorite being viewed and turn save buttons for saved
+    // places into "★ Saved" toggles. Favorites, save buttons and the weather
+    // panel carry coordinates rounded to 4 decimals (data-lat/lon), so equal
+    // strings mean the same place. Runs after every swap, so it stays right
+    // after saving, removing or picking a place.
     function markFavorites() {
       const key = (el) => el.dataset.lat + "," + el.dataset.lon;
       const favorites = document.querySelectorAll("#favorites-list [data-favorite]");
-      const saved = new Set(Array.from(favorites, key));
+      const removeUrls = new Map(Array.from(favorites, (link) => [key(link), link.dataset.removeUrl]));
       const selected = document.querySelector("#weather-panel [data-selected-place]");
       for (const link of favorites) {
         link.classList.toggle("menu-active", selected !== null && key(link) === key(selected));
       }
       for (const button of document.querySelectorAll("[data-save-button]")) {
-        const isSaved = saved.has(key(button));
-        button.disabled = isSaved;
-        button.textContent = isSaved ? "★ Saved" : "☆ Save";
-        button.setAttribute("aria-label", isSaved
-          ? button.dataset.label + " is in your favorites"
-          : "Save " + button.dataset.label + " to favorites");
+        const removeUrl = removeUrls.get(key(button));
+        if (removeUrl) {
+          button.dataset.removeUrl = removeUrl;
+          button.textContent = "★ Saved";
+          button.title = "Remove from favorites";
+          button.setAttribute("aria-label", "Remove " + button.dataset.label + " from favorites");
+        } else {
+          delete button.dataset.removeUrl;
+          button.textContent = "☆ Save";
+          button.title = "";
+          button.setAttribute("aria-label", "Save " + button.dataset.label + " to favorites");
+        }
       }
     }
     document.addEventListener("DOMContentLoaded", markFavorites);
     document.body.addEventListener("htmx:afterSettle", markFavorites);
+
+    // Clicking "★ Saved" removes the favorite instead of saving it again.
+    // The request's source is the favorites list, so it sends the CSRF header
+    // from <body> but none of the save form's fields.
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-save-button][data-remove-url]");
+      if (!button) return;
+      event.preventDefault(); // don't submit the save form
+      htmx.ajax("DELETE", button.dataset.removeUrl, {
+        source: "#favorites-list",
+        target: "#favorites-list",
+        swap: "outerHTML",
+      });
+    });
   </script>
 </body>
 </html>

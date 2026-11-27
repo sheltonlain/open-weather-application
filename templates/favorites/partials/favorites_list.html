@@ -9,6 +9,7 @@
     <li class="flex flex-row items-center">
       <a
         data-favorite data-lat="{{ favorite.place.lat|floatformat:4 }}" data-lon="{{ favorite.place.lon|floatformat:4 }}"
+        data-remove-url="{% url 'remove_favorite' favorite.pk %}"
         class="flex-1"
         href="{{ weather_url }}?{{ favorite.place.query_string }}"
         hx-get="{{ weather_url }}?{{ favorite.place.query_string }}"
