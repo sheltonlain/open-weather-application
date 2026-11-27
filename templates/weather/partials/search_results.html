@@ -9,8 +9,14 @@
   {% elif places %}
   <ul class="menu w-full rounded-box bg-base-200">
     {% for place in places %}
+    {% url 'weather' as weather_url %}
     <li>
-      <span>{{ place.name }}{% if place.state %}, {{ place.state }}{% endif %}, {{ place.country }}</span>
+      <a
+        href="{{ weather_url }}?{{ place.query_string }}"
+        hx-get="{{ weather_url }}?{{ place.query_string }}"
+        hx-target="#weather-panel"
+        hx-swap="outerHTML"
+      >{{ place.label }}</a>
     </li>
     {% endfor %}
   </ul>

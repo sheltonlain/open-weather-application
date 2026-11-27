@@ -108,12 +108,12 @@ A single search box on the dashboard that sends `GET /weather/search/?q=` via HT
 
 ### Acceptance criteria
 
-- [ ] The panel shows every listed metric from a saved `/data/2.5/weather` fixture
-- [ ] Sunrise and sunset are shown in the location's local time (using the timezone offset)
-- [ ] Missing or invalid lat/lon returns 400
-- [ ] A service failure renders a friendly "weather unavailable, please try again" message
-- [ ] A second request for the same rounded coordinates within the TTL makes no new HTTP call
-- [ ] The rendered page and partial never contain the API key
+- [x] The panel shows every listed metric from a saved `/data/2.5/weather` fixture
+- [x] Sunrise and sunset are shown in the location's local time (using the timezone offset)
+- [x] Missing or invalid lat/lon returns 400
+- [x] A service failure renders a friendly "weather unavailable, please try again" message
+- [x] A second request for the same rounded coordinates within the TTL makes no new HTTP call
+- [x] The rendered page and partial never contain the API key
 
 ---
 

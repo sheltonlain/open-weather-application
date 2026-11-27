@@ -42,7 +42,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 7. **Forecast:** Group 3-hour steps into daily high/low/condition in `services.py`; render with Chart.js via `json_script`.
 8. **Map:** Leaflet + OpenStreetMap tiles with weather markers (selected location + favorites). No weather tile overlays.
 9. **Favorites:** `Favorite(user, name, state, country, lat, lon, created_at)`; lat/lon rounded to 4 decimals; unique per `(user, lat, lon)`. Always filter by `request.user`; views require login.
-10. **Pages & HTMX:** `/` dashboard with HTMX partials: `GET /weather/search/?q=`, `GET /weather/?lat=&lon=`, `POST /favorites/`, `DELETE /favorites/<id>/`. Partial views also render full pages when not `request.htmx`. Send CSRF token via `hx-headers` in `base.html`. Use correct HTTP methods and status codes.
+10. **Pages & HTMX:** `/` dashboard with HTMX partials: `GET /weather/search/?q=`, `GET /weather/?lat=&lon=`, `POST /favorites/`, `DELETE /favorites/<id>/`. Partial views also render full pages when not `request.htmx`. Send CSRF token via `hx-headers` in `base.html`. Use correct HTTP methods and status codes. Weather panel links carry `name`/`state`/`country` too (build them with `Place.query_string`): OpenWeather's `/data/2.5/weather` `name` is its nearest station, not the chosen place.
 
 ## 6. Testing Seams & Mocking
 - **Why:** the suite must run fully offline, fast, and without consuming live OpenWeather quota or needing the real API key.

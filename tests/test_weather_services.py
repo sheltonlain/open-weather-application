@@ -4,8 +4,14 @@ import pytest
 import requests
 from responses import matchers
 
-from tests.openweather import GEO_DIRECT_URL, GEO_ZIP_URL, load_fixture
-from weather.services import Place, WeatherServiceError, search_cities, search_zip
+from tests.openweather import GEO_DIRECT_URL, GEO_ZIP_URL, WEATHER_URL, load_fixture
+from weather.services import (
+    Place,
+    WeatherServiceError,
+    get_current_weather,
+    search_cities,
+    search_zip,
+)
 
 
 def test_search_cities_calls_direct_geocoding_and_returns_places(mocked_responses):
@@ -104,3 +110,47 @@ def test_search_zip_not_found_returns_empty_list(mocked_responses):
     )
 
     assert search_zip("00000,US") == []
+
+
+def test_current_weather_is_cached_by_rounded_coordinates(mocked_responses):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+
+    first = get_current_weather(40.7484, -73.9967)
+    # Rounds to the same 4-decimal coordinates, so it is served from the cache.
+    second = get_current_weather(40.74841, -73.99672)
+
+    assert len(mocked_responses.calls) == 1
+    assert second == first
+
+
+@pytest.mark.parametrize(
+    "mock_kwargs",
+    [
+        pytest.param({"body": requests.exceptions.Timeout()}, id="timeout"),
+        pytest.param({"status": 500}, id="non-200"),
+        pytest.param(
+            {"body": "<html>not json</html>", "content_type": "text/html"},
+            id="malformed-json",
+        ),
+        pytest.param({"json": {"cod": 200}}, id="missing-fields"),
+    ],
+)
+def test_current_weather_failure_raises_weather_service_error(
+    mocked_responses, mock_kwargs
+):
+    mocked_responses.get(WEATHER_URL, **mock_kwargs)
+
+    with pytest.raises(WeatherServiceError):
+        get_current_weather(40.7484, -73.9967)
+
+
+def test_failed_weather_request_is_not_cached(mocked_responses):
+    mocked_responses.get(WEATHER_URL, status=500)
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+
+    with pytest.raises(WeatherServiceError):
+        get_current_weather(40.7484, -73.9967)
+    weather = get_current_weather(40.7484, -73.9967)
+
+    assert weather.name == "Weehawken"
+    assert len(mocked_responses.calls) == 2

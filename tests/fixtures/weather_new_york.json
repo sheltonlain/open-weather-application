@@ -1,0 +1,32 @@
+{
+  "coord": {"lon": -73.9967, "lat": 40.7484},
+  "weather": [
+    {"id": 803, "main": "Clouds", "description": "broken clouds", "icon": "04d"}
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 6.4,
+    "feels_like": 3.1,
+    "temp_min": 5.2,
+    "temp_max": 7.6,
+    "pressure": 1018,
+    "humidity": 62,
+    "sea_level": 1018,
+    "grnd_level": 1016
+  },
+  "visibility": 10000,
+  "wind": {"speed": 4.6, "deg": 290, "gust": 8.2},
+  "clouds": {"all": 75},
+  "dt": 1795705200,
+  "sys": {
+    "type": 2,
+    "id": 2008101,
+    "country": "US",
+    "sunrise": 1795694100,
+    "sunset": 1795728660
+  },
+  "timezone": -18000,
+  "id": 5128581,
+  "name": "Weehawken",
+  "cod": 200
+}

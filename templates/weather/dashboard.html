@@ -10,12 +10,7 @@
         {% include "weather/partials/search_results.html" %}
       </div>
     </div>
-    <div id="weather-panel" class="card bg-base-100 shadow">
-      <div class="card-body">
-        <h2 class="card-title">Weather</h2>
-        <p class="text-base-content/70">Pick a place to see its weather.</p>
-      </div>
-    </div>
+    {% include "weather/partials/weather_panel.html" %}
   </section>
   <aside id="favorites" class="card bg-base-100 shadow">
     <div class="card-body">

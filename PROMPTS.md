@@ -28,6 +28,26 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 5: current weather panel (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md Implement phase 5`
+2. "yes, approved" (the three TDD behaviors: sunrise/sunset in local time, repeated requests served from the cache, missing/invalid lat/lon returns 400)
+3. "Yes" (cycle 1 RED test: New York panel shows sunrise 06:55 and sunset 16:31, not the UTC 11:55/21:31)
+4. "Yes" (move on to cycle 2)
+5. "Yes" (cycle 2 RED test: two calls for coordinates that round to the same 4 decimals make one HTTP call)
+6. "Yes" (move on to cycle 3)
+7. "Yes" (cycle 3 RED test: 6 parametrized bad-coordinate cases return 400 with no OpenWeather call)
+8. "Yes" (build the rest of the phase: search results link to the panel, remaining view/service tests)
+9. "New york displays the name Weehawken, US"
+10. "Yes, all pass"
+11. "yes, add just #1" (the CLAUDE.md line about weather links carrying the place name)
+
+### Summary
+- **Outcome:** `weather/services.py` gained `CurrentWeather` (with an `emoji` property mapping OpenWeather icon codes), `get_current_weather()`, `_local_time()` (applies OpenWeather's `timezone` offset), and `_get_cached_json()` (local-memory cache of the raw metric JSON for 10 minutes, key = endpoint + lat/lon rounded to 4 decimals; failures are not cached). `Place` gained `label` and `query_string`. New view `GET /weather/?lat=&lon=` validates coordinates (missing, non-numeric, NaN, out of range → 400 before any API call), shows a friendly message on service failure, and renders the partial for HTMX or the full page otherwise. New templates `partials/weather_panel.html` and `weather.html`; the dashboard includes the empty panel, and each search result is now a link with `hx-get` into `#weather-panel`. New fixture `weather_new_york.json` and `WEATHER_URL` helper. 82 tests pass, Ruff clean, all Phase 5 criteria ticked. CLAUDE.md now says weather links carry `name`/`state`/`country` because OpenWeather names its nearest station.
+- **Deviations:** Claude chose emoji icons instead of OpenWeather icon images, because Phase 9 forbids OpenWeather URLs in the page or browser requests; I didn't object. Of four proposed CLAUDE.md additions I kept only the place-name rule.
+- **Sideways:** Manual testing showed "Weehawken, US" for New York: `/data/2.5/weather` labels coordinates with its nearest station. The fixture had used a made-up "New York" name, which hid the problem in tests. Fixed by passing the chosen name through the panel links (with a test that fails on the station name, written first) and making the fixture realistic; three non-TDD tests were updated for the rename and the longer link. Cycle 3 needed scaffolding first, because the initial view crashed (`KeyError`/`ValueError`) instead of failing on an assertion. Ruff flagged one long line and reformatted one file. DST limitation noted but not fixed: sunrise uses OpenWeather's current offset, so it can be an hour off on a changeover day. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-25 — Phase 4: ZIP search in the same box (TDD)
 
 ### Prompts

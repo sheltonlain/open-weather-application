@@ -1,13 +1,30 @@
 """OpenWeather client: the only module that talks to the OpenWeather API."""
 
 from dataclasses import dataclass
+from datetime import datetime, time, timedelta, timezone
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 BASE_URL = "https://api.openweathermap.org"
 TIMEOUT_SECONDS = 5
 SEARCH_LIMIT = 5
+CACHE_SECONDS = 10 * 60  # OpenWeather updates its data about every 10 minutes.
+
+# Emoji per OpenWeather icon group, so the browser never loads OpenWeather URLs.
+ICON_EMOJI = {
+    "01": "☀️",
+    "02": "⛅",
+    "03": "☁️",
+    "04": "☁️",
+    "09": "🌧️",
+    "10": "🌦️",
+    "11": "⛈️",
+    "13": "❄️",
+    "50": "🌫️",
+}
 
 
 class WeatherServiceError(Exception):
@@ -28,6 +45,49 @@ class Place:
     lat: float
     lon: float
 
+    @property
+    def label(self) -> str:
+        """Return "name, state, country", skipping any empty part."""
+        return ", ".join(part for part in (self.name, self.state, self.country) if part)
+
+    @property
+    def query_string(self) -> str:
+        """Return the query string that loads this place's weather panel."""
+        return urlencode(
+            {
+                "lat": self.lat,
+                "lon": self.lon,
+                "name": self.name,
+                "state": self.state,
+                "country": self.country,
+            }
+        )
+
+
+@dataclass(frozen=True)
+class CurrentWeather:
+    """Current conditions for one place, in metric units."""
+
+    name: str
+    country: str
+    description: str
+    icon: str
+    temp: float
+    feels_like: float
+    humidity: int
+    wind_speed: float
+    clouds: int
+    pressure: int
+    sunrise: time
+    sunset: time
+
+    @property
+    def emoji(self) -> str:
+        """Return an emoji for the OpenWeather icon code (e.g. "04d")."""
+        if self.icon == "01n":
+            return "🌙"
+        return ICON_EMOJI.get(self.icon[:2], "🌡️")
+
 
 def _get_json(path: str, params: dict) -> list | dict:
     """GET an OpenWeather endpoint with the API key and return its JSON body."""
@@ -45,6 +105,17 @@ def _get_json(path: str, params: dict) -> list | dict:
         # "from None" drops the original error, whose message contains the full
         # URL including the API key, so the key never ends up in logs.
         raise WeatherServiceError(f"OpenWeather request to {path} failed") from None
+
+
+def _get_cached_json(path: str, lat: float, lon: float) -> dict:
+    """GET a lat/lon endpoint in metric units, cached by endpoint and position."""
+    lat, lon = round(lat, 4), round(lon, 4)
+    key = f"openweather:{path}:{lat:.4f}:{lon:.4f}"
+    data = cache.get(key)
+    if data is None:
+        data = _get_json(path, {"lat": lat, "lon": lon, "units": "metric"})
+        cache.set(key, data, CACHE_SECONDS)
+    return data
 
 
 def search_cities(query: str) -> list[Place]:
@@ -84,3 +155,33 @@ def search_zip(zip_query: str) -> list[Place]:
             lon=item["lon"],
         )
     ]
+
+
+def _local_time(timestamp: int, utc_offset_seconds: int) -> time:
+    """Return the wall-clock time at a place for a UTC Unix timestamp."""
+    place_tz = timezone(timedelta(seconds=utc_offset_seconds))
+    return datetime.fromtimestamp(timestamp, place_tz).time()
+
+
+def get_current_weather(lat: float, lon: float) -> CurrentWeather:
+    """Return current weather at the given coordinates (metric units)."""
+    data = _get_cached_json("/data/2.5/weather", lat, lon)
+    try:
+        condition = data["weather"][0]
+        offset = data["timezone"]
+        return CurrentWeather(
+            name=data["name"],
+            country=data["sys"].get("country", ""),
+            description=condition["description"],
+            icon=condition["icon"],
+            temp=data["main"]["temp"],
+            feels_like=data["main"]["feels_like"],
+            humidity=data["main"]["humidity"],
+            wind_speed=data["wind"]["speed"],
+            clouds=data["clouds"]["all"],
+            pressure=data["main"]["pressure"],
+            sunrise=_local_time(data["sys"]["sunrise"], offset),
+            sunset=_local_time(data["sys"]["sunset"], offset),
+        )
+    except (KeyError, IndexError, TypeError):
+        raise WeatherServiceError("OpenWeather sent unexpected weather data") from None
