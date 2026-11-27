@@ -42,6 +42,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 5. **Search:** One box. `parse_query()` treats input starting with digits as ZIP (default country `US`, e.g. `10001,US`); a letter-first postcode is a ZIP only with a 2-letter country code (e.g. `SW1A 1AA,GB`); otherwise city via `/geo/1.0/direct`. ZIPs use `/geo/1.0/zip`; its 404 means "no results", not a service error. Always show results as a list (name, state, country) with a save button.
 6. **Geolocation:** If browser permission is already granted, auto-detect; else show a "Use my location" button. Fallback: first favorite or the search box. Reverse-geocode on the backend.
    - The inline script in `base.html` reads `data-geolocation`, `data-weather-url` and `data-fallback-url` (first favorite's panel URL) from `weather/partials/geolocation.html`.
+   - The user's choice beats a late location lookup: the script skips its own load if any `htmx:beforeRequest` targeting `#weather-panel` started while it waited (clicking the button resets this). New panel-loading UI must target `#weather-panel` so it counts as a choice.
    - A panel request without `name` is labeled by `/geo/1.0/reverse`, else by its coordinates; never by OpenWeather's station name.
 7. **Forecast:** Group 3-hour steps into daily high/low/condition in `services.py`; render with Chart.js via `json_script`.
 8. **Map:** Leaflet + OpenStreetMap tiles with weather markers (selected location + favorites). No weather tile overlays.

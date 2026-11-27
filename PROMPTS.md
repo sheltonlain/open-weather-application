@@ -28,6 +28,18 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 10 follow-up: geolocation search-result race
+
+### Prompts
+1. "fix the search-result race in the geolocation script"
+2. "manual verification passes, commit and push"
+3. "Append a session log to PROMPTS.md and add necessary info to CLAUDE.md"
+
+### Summary
+- **Outcome:** fixed the known gap logged in the Phase 10 entry. The geolocation script in `templates/base.html` now listens for `htmx:beforeRequest` targeting `#weather-panel`; if any such request starts while the browser is still finding the position, the location result and the first-favorite fallback are ignored, so the user's choice wins. Clicking "Use my location" clears the flag, so an explicit request still replaces the current panel. Committed as `2dae10e` and pushed. CLAUDE.md gained a note on this rule.
+- **Deviations:** none; I recommended the request-started check over comparing panel elements because it also covers a click whose response is still in flight, and the user accepted the fix as built.
+- **Sideways:** nothing went wrong. The fix is browser-only JavaScript with no automated test (no JS runner); I held the commit until the user confirmed four manual checks (search during the permission prompt, favorite during the prompt then Block, button after picking, silent load on reload).
+
 ## 2026-11-26 — Phase 10: geolocation and fallback (TDD)
 
 ### Prompts
