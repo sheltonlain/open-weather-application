@@ -10,10 +10,15 @@ from django.views.decorators.http import require_http_methods
 from django_htmx.http import HttpResponseClientRedirect
 
 from favorites.forms import FavoriteForm
-from favorites.models import COORDINATE_DECIMALS, Favorite
+from favorites.models import Favorite
+from favorites.services import (
+    DUPLICATE_FAVORITE_MESSAGE,
+    PENDING_FAVORITE_SESSION_KEY,
+    save_favorite,
+    saved_message,
+)
 
 INVALID_FAVORITE_MESSAGE = "That place could not be saved. Please try again."
-DUPLICATE_FAVORITE_MESSAGE = "That place is already in your favorites."
 
 
 def login_required_htmx(view):
@@ -21,11 +26,16 @@ def login_required_htmx(view):
 
     A plain 302 would make HTMX swap the login page into the sidebar, so
     anonymous HTMX requests get HX-Redirect back to login, with ``next`` set to
-    the page the user was on.
+    the page the user was on. An anonymous Save (a valid POST) is kept in the
+    session, and the user_logged_in hook saves it once they log in.
     """
 
     @wraps(view)
     def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        if request.method == "POST" and not request.user.is_authenticated:
+            form = FavoriteForm(request.POST)
+            if form.is_valid():
+                request.session[PENDING_FAVORITE_SESSION_KEY] = form.cleaned_data
         if request.htmx and not request.user.is_authenticated:
             next_url = request.htmx.current_url_abs_path or reverse("dashboard")
             login_url = redirect_to_login(next_url).url
@@ -57,20 +67,15 @@ def favorites(request: HttpRequest) -> HttpResponse:
     if not form.is_valid():
         return _render_list(request, INVALID_FAVORITE_MESSAGE, status=400)
 
-    place = form.cleaned_data
-    lat = round(place.pop("lat"), COORDINATE_DECIMALS)
-    lon = round(place.pop("lon"), COORDINATE_DECIMALS)
-    favorite, created = Favorite.objects.get_or_create(
-        user=request.user, lat=lat, lon=lon, defaults=place
-    )
+    favorite, created = save_favorite(request.user, form.cleaned_data)
     if not created:
         return _render_list(request, DUPLICATE_FAVORITE_MESSAGE)
 
-    saved_message = f"Saved {favorite.place.label} to your favorites."
+    message = saved_message(favorite)
     if not request.htmx:
-        messages.success(request, saved_message)
+        messages.success(request, message)
         return redirect("dashboard")
-    return _render_list(request, saved_message, status=201)
+    return _render_list(request, message, status=201)
 
 
 @login_required_htmx

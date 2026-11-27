@@ -12,7 +12,7 @@ from pytest_django.asserts import (
 )
 
 from favorites.models import Favorite
-from tests.factories import FavoriteFactory, UserFactory
+from tests.factories import DEFAULT_PASSWORD, FavoriteFactory, UserFactory
 from tests.openweather import GEO_DIRECT_URL, WEATHER_URL, load_fixture
 
 HTMX = {"HX-Request": "true"}
@@ -275,3 +275,78 @@ def test_weather_panel_has_a_save_button_for_the_place_shown(client, mocked_resp
     assertContains(response, 'hx-target="#favorites-list"')
     assertContains(response, 'name="name" value="New York"')
     assertContains(response, 'name="lat" value="40.7484"')
+
+
+# --- Saving before logging in -----------------------------------------------
+
+
+@pytest.mark.django_db
+def test_place_saved_while_logged_out_is_added_after_login(client):
+    user = UserFactory()
+    client.post(reverse("favorites"), LONDON, headers=HTMX)
+
+    response = client.post(
+        reverse("login"),
+        {"username": user.username, "password": DEFAULT_PASSWORD},
+        follow=True,
+    )
+
+    assert Favorite.objects.filter(user=user, name="London").exists()
+    assertContains(response, "Saved London, England, GB to your favorites.")
+
+
+@pytest.mark.django_db
+def test_place_saved_while_logged_out_is_added_after_registering(client):
+    client.post(reverse("favorites"), LONDON, headers=HTMX)
+
+    password = {"password1": DEFAULT_PASSWORD, "password2": DEFAULT_PASSWORD}
+
+    response = client.post(
+        reverse("register"), {"username": "newbie", **password}, follow=True
+    )
+
+    assert Favorite.objects.filter(user__username="newbie", name="London").exists()
+    assertContains(response, "Saved London, England, GB to your favorites.")
+
+
+@pytest.mark.django_db
+def test_pending_save_of_an_existing_favorite_is_not_duplicated(client):
+    user = UserFactory()
+    FavoriteFactory(user=user, lat=51.5073, lon=-0.1276)
+    client.post(reverse("favorites"), LONDON)  # a non-HTMX Save works too
+
+    response = client.post(
+        reverse("login"),
+        {"username": user.username, "password": DEFAULT_PASSWORD},
+        follow=True,
+    )
+
+    assert Favorite.objects.filter(user=user).count() == 1
+    assertContains(response, "That place is already in your favorites.")
+
+
+@pytest.mark.django_db
+def test_pending_save_is_used_once(client):
+    user = UserFactory()
+    credentials = {"username": user.username, "password": DEFAULT_PASSWORD}
+    client.post(reverse("favorites"), LONDON, headers=HTMX)
+    client.post(reverse("login"), credentials, follow=True)  # shows its message
+    Favorite.objects.all().delete()
+    client.post(reverse("logout"))
+
+    response = client.post(reverse("login"), credentials, follow=True)
+
+    assert not Favorite.objects.exists()
+    assertNotContains(response, "to your favorites")
+
+
+@pytest.mark.django_db
+def test_invalid_save_while_logged_out_is_not_kept(client):
+    user = UserFactory()
+    client.post(reverse("favorites"), {**LONDON, "lat": "north"}, headers=HTMX)
+
+    client.post(
+        reverse("login"), {"username": user.username, "password": DEFAULT_PASSWORD}
+    )
+
+    assert not Favorite.objects.exists()
