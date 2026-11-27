@@ -231,3 +231,19 @@ def test_panel_is_themed_by_current_condition(client, mocked_responses):
     response = get_panel(client, NEW_YORK)
 
     assertContains(response, 'data-weather-theme="clouds"')
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("icon", "dark"),
+    [("01n", True), ("10d", True), ("11d", True), ("01d", False), ("04d", False)],
+)
+def test_dark_summary_cards_use_the_dark_theme(client, mocked_responses, icon, dark):
+    # Buttons on night/rain/storm cards need light colors to stay visible.
+    weather = load_fixture("weather_new_york.json")
+    weather["weather"][0]["icon"] = icon
+    mocked_responses.get(WEATHER_URL, json=weather)
+
+    response = get_panel(client, {**NEW_YORK, "name": "New York"})
+
+    assert ('data-theme="dark"' in response.content.decode()) is dark
