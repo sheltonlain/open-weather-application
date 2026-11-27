@@ -123,9 +123,13 @@
   </div>
   {% else %}
   <div class="card bg-base-100 shadow">
-    <div class="card-body">
-      <h2 class="card-title">Weather</h2>
+    <div class="card-body items-center py-16 text-center">
+      <p class="text-7xl" aria-hidden="true">🌤️</p>
+      <h2 class="card-title text-2xl">Welcome to Open Weather</h2>
       <p class="text-base-content/70">Pick a place to see its weather.</p>
+      <p class="text-sm text-base-content/60">
+        Search for a city or ZIP code above{% if user.is_authenticated %}, choose a favorite{% endif %}, or use your location.
+      </p>
     </div>
   </div>
   {% endif %}

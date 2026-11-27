@@ -3,8 +3,10 @@
 {% block title %}Register · Open Weather App{% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 shadow max-w-md mx-auto">
+<div class="flex min-h-[70vh] items-center justify-center">
+<div class="card bg-base-100 shadow w-full max-w-md">
   <div class="card-body">
+    <p class="text-5xl text-center" aria-hidden="true">🌤️</p>
     <h1 class="card-title text-2xl">Create an account</h1>
     <form method="post" class="space-y-3">
       {% csrf_token %}
@@ -13,5 +15,6 @@
     </form>
     <p class="text-sm">Already have an account? <a href="{% url 'login' %}" class="link">Log in</a></p>
   </div>
+</div>
 </div>
 {% endblock %}

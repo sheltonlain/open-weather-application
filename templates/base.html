@@ -20,16 +20,20 @@
     <nav class="flex items-center gap-2">
       {% include "accounts/partials/units_toggle.html" %}
       {% if user.is_authenticated %}
-      <span class="font-medium">{{ user.username }}</span>
-      <a href="{% url 'settings' %}" class="btn btn-ghost btn-sm">Settings</a>
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
-      </form>
-      {% else %}
-      <a href="{% url 'login' %}" class="btn btn-ghost btn-sm">Log in</a>
-      <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Register</a>
+      {# One logout form; the menu buttons below submit it via form="logout-form". #}
+      <form id="logout-form" method="post" action="{% url 'logout' %}">{% csrf_token %}</form>
       {% endif %}
+      {# Wide screens: links in a row. #}
+      <ul class="menu menu-horizontal items-center gap-1 p-0 hidden sm:flex">
+        {% include "accounts/partials/nav_links.html" %}
+      </ul>
+      {# Small screens: the same links in a dropdown. #}
+      <div class="dropdown dropdown-end sm:hidden">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm" aria-label="Open menu">☰</div>
+        <ul tabindex="0" class="dropdown-content menu z-10 mt-2 w-48 rounded-box bg-base-100 p-2 shadow">
+          {% include "accounts/partials/nav_links.html" %}
+        </ul>
+      </div>
     </nav>
   </header>
   <main class="container mx-auto p-4">
