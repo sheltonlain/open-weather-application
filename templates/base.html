@@ -244,15 +244,15 @@
     function markFavorites() {
       const key = (el) => el.dataset.lat + "," + el.dataset.lon;
       const favorites = document.querySelectorAll("#favorites-list [data-favorite]");
-      const removeUrls = new Map(Array.from(favorites, (link) => [key(link), link.dataset.removeUrl]));
+      const favoriteAt = new Map(Array.from(favorites, (link) => [key(link), link]));
       const selected = document.querySelector("#weather-panel [data-selected-place]");
       for (const link of favorites) {
         link.classList.toggle("menu-active", selected !== null && key(link) === key(selected));
       }
       for (const button of document.querySelectorAll("[data-save-button]")) {
-        const removeUrl = removeUrls.get(key(button));
-        if (removeUrl) {
-          button.dataset.removeUrl = removeUrl;
+        const favorite = favoriteAt.get(key(button));
+        if (favorite) {
+          button.dataset.removeUrl = favorite.dataset.removeUrl;
           button.classList.replace("btn-outline", "btn-warning");
           button.textContent = "★ Saved";
           button.title = "Remove from favorites";
@@ -265,22 +265,48 @@
           button.setAttribute("aria-label", "Save " + button.dataset.label + " to favorites");
         }
       }
+      // "🏠 Make default" shows only for favorites; "🏠 Default" when it is one.
+      for (const button of document.querySelectorAll("[data-default-button]")) {
+        const favorite = favoriteAt.get(key(button));
+        button.classList.toggle("hidden", !favorite);
+        if (!favorite) continue;
+        const isDefault = "default" in favorite.dataset;
+        button.dataset.toggleUrl = favorite.dataset.setDefaultUrl;
+        button.dataset.method = isDefault ? "DELETE" : "POST";
+        button.classList.toggle("btn-primary", isDefault);
+        button.classList.toggle("btn-outline", !isDefault);
+        button.textContent = isDefault ? "🏠 Default" : "🏠 Make default";
+        button.title = isDefault ? "Stop opening the app on this place" : "Open the app on this place";
+        button.setAttribute("aria-pressed", isDefault);
+        button.setAttribute("aria-label", isDefault
+          ? button.dataset.label + " is your default location; clear it"
+          : "Make " + button.dataset.label + " your default location");
+      }
     }
     document.addEventListener("DOMContentLoaded", markFavorites);
     document.body.addEventListener("htmx:afterSettle", markFavorites);
 
-    // Clicking "★ Saved" removes the favorite instead of saving it again.
-    // The request's source is the favorites list, so it sends the CSRF header
-    // from <body> but none of the save form's fields.
-    document.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-save-button][data-remove-url]");
-      if (!button) return;
-      event.preventDefault(); // don't submit the save form
-      htmx.ajax("DELETE", button.dataset.removeUrl, {
+    // Clicking "★ Saved" removes the favorite instead of saving it again, and
+    // the card's 🏠 button sets or clears the default. Each request's source
+    // is the favorites list, so it sends the CSRF header from <body> but none
+    // of the save form's fields; the new list then re-runs markFavorites().
+    function updateFavorites(method, url) {
+      htmx.ajax(method, url, {
         source: "#favorites-list",
         target: "#favorites-list",
         swap: "outerHTML",
       });
+    }
+    document.addEventListener("click", (event) => {
+      const saved = event.target.closest("[data-save-button][data-remove-url]");
+      if (saved) {
+        event.preventDefault(); // don't submit the save form
+        updateFavorites("DELETE", saved.dataset.removeUrl);
+      }
+      const home = event.target.closest("[data-default-button][data-toggle-url]");
+      if (home) {
+        updateFavorites(home.dataset.method, home.dataset.toggleUrl);
+      }
     });
   </script>
 </body>

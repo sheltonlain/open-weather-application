@@ -6,6 +6,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
 
 from tests.factories import FavoriteFactory, UserFactory
+from tests.openweather import WEATHER_URL, load_fixture
 
 HTMX = {"HX-Request": "true"}
 
@@ -146,3 +147,34 @@ def test_default_favorite_is_labeled_in_the_sidebar(client):
     response = client.get(reverse("favorites"), headers=HTMX)
 
     assertContains(response, ">Default</span>", count=1)
+
+
+@pytest.mark.django_db
+def test_favorite_links_carry_their_default_url_and_state(client):
+    # The summary card's "🏠 Make default" button reads these from the sidebar.
+    user = UserFactory()
+    home = FavoriteFactory(user=user, is_default=True)
+    other = FavoriteFactory(user=user)
+    client.force_login(user)
+
+    response = client.get(reverse("favorites"), headers=HTMX)
+
+    assertContains(response, f'data-set-default-url="{default_url(home)}" data-default')
+    assertContains(response, f'data-set-default-url="{default_url(other)}"\n')
+
+
+@pytest.mark.django_db
+def test_summary_card_has_a_default_button_only_for_logged_in_users(
+    client, mocked_responses
+):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    params = {"lat": "40.7484", "lon": "-73.9967", "name": "New York"}
+
+    anonymous = client.get(reverse("weather"), params, headers=HTMX)
+    client.force_login(UserFactory())
+    logged_in = client.get(reverse("weather"), params, headers=HTMX)
+
+    assertNotContains(anonymous, "data-default-button")
+    assertContains(
+        logged_in, 'data-default-button data-lat="40.7484" data-lon="-73.9967"'
+    )
