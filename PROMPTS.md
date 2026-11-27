@@ -28,6 +28,19 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 8 follow-up: save a pending favorite after login
+
+### Prompts
+1. "is there a way to make it so that when you click save and then login, you are redirected to the search you had done. Or for the city to automatically appear in the list?"
+2. "Do option 1" (save the pending favorite automatically after login, rather than option 2, pushing search URLs so login returns to the results)
+3. "yes, push it"
+4. "add this session to PROMPTS.md"
+
+### Summary
+- **Outcome:** An anonymous Save is now finished after login or registration. `login_required_htmx` validates the anonymous POST with `FavoriteForm` and keeps the cleaned data in the session under `pending_favorite`. A `user_logged_in` receiver in the new `favorites/signals.py` (connected in `FavoritesConfig.ready()`) pops it, saves it, and adds a "Saved …" or "already in your favorites" message. The rounding plus `get_or_create` logic moved out of the add view into a shared `save_favorite()` in the new `favorites/services.py`, along with `saved_message()` and the duplicate message, so the view and the receiver share one path. 5 new tests (login, register, existing favorite not duplicated, pending save used only once, invalid save not kept); 149 tests pass, Ruff clean. Committed as `9f7f704 feat(favorites): save a pending favorite after login` and pushed.
+- **Deviations:** Claude offered two options (auto-save after login; `hx-push-url` so login returns to the search) and recommended option 1; I chose option 1. Option 2 was not built. The login still returns to `/`, not the search results.
+- **Sideways:** The message helpers first lived in `signals.py`, and the views imported them from there; they were moved to `services.py` while still green. `test_pending_save_is_used_once` failed on its first run because the first login's "Saved …" message was never displayed (no `follow=True`) and appeared on the second login; the test was fixed to follow the first redirect, and the assertions were unchanged. Claude committed under CLAUDE.md §9 but waited for my go-ahead before pushing. `requirements.md` is still untracked.
+
 ## 2026-11-26 — Phase 8: favorites (save, list, switch, remove) (TDD)
 
 ### Prompts
