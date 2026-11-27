@@ -430,3 +430,14 @@ def test_favorite_links_carry_their_remove_url(client):
 
     url = reverse("remove_favorite", args=[favorite.pk])
     assertContains(response, f'data-remove-url="{url}"')
+
+
+@pytest.mark.django_db
+def test_sidebar_has_no_default_location_hint(client):
+    user = UserFactory()
+    FavoriteFactory(user=user)
+    client.force_login(user)
+
+    response = client.get(reverse("favorites"), headers=HTMX)
+
+    assertNotContains(response, "to open the app on that place")
