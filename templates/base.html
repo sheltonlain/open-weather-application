@@ -6,6 +6,7 @@
   <title>{% block title %}Open Weather App{% endblock %}</title>
   {% tailwind_css %}
   {% htmx_script %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="min-h-screen bg-base-200" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <header class="navbar bg-base-100 shadow-sm">
@@ -33,5 +34,42 @@
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
+  <script>
+    // Draw the forecast chart from the data the server put in the page.
+    // Runs on page load and again whenever HTMX swaps in a new weather panel.
+    function drawForecastChart() {
+      const canvas = document.getElementById("forecast-chart");
+      const dataTag = document.getElementById("forecast-chart-data");
+      if (!canvas || !dataTag || !window.Chart) return;
+      const data = JSON.parse(dataTag.textContent);
+      const oldChart = Chart.getChart(canvas);
+      if (oldChart) oldChart.destroy();
+      new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: data.labels,
+          datasets: [
+            { label: "High (" + data.unit + ")", data: data.highs, borderColor: "#ef4444", backgroundColor: "#ef4444", tension: 0.3 },
+            { label: "Low (" + data.unit + ")", data: data.lows, borderColor: "#3b82f6", backgroundColor: "#3b82f6", tension: 0.3 },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (item) => item.dataset.label.split(" ")[0] + ": " + item.formattedValue + data.unit,
+                footer: (items) => data.conditions[items[0].dataIndex],
+              },
+            },
+          },
+          scales: { y: { title: { display: true, text: data.unit } } },
+        },
+      });
+    }
+    document.addEventListener("DOMContentLoaded", drawForecastChart);
+    document.body.addEventListener("htmx:afterSettle", drawForecastChart);
+  </script>
 </body>
 </html>

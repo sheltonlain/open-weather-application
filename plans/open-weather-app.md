@@ -145,11 +145,11 @@ The service fetches `/data/2.5/forecast` and groups 3-hour steps into daily high
 
 ### Acceptance criteria
 
-- [ ] Daily grouping is unit-tested against a saved forecast fixture (correct days, highs, lows, condition)
-- [ ] Days are grouped by the location's local date, not UTC
-- [ ] Chart data is emitted via `json_script` in the active units
-- [ ] The chart renders on full-page loads and after HTMX swaps
-- [ ] A forecast failure shows a friendly message without breaking current conditions
+- [x] Daily grouping is unit-tested against a saved forecast fixture (correct days, highs, lows, condition)
+- [x] Days are grouped by the location's local date, not UTC
+- [x] Chart data is emitted via `json_script` in the active units
+- [x] The chart renders on full-page loads and after HTMX swaps
+- [x] A forecast failure shows a friendly message without breaking current conditions
 
 ---
 

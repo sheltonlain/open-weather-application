@@ -1,7 +1,8 @@
 """OpenWeather client: the only module that talks to the OpenWeather API."""
 
+from collections import Counter
 from dataclasses import dataclass, replace
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from urllib.parse import urlencode
 
 import requests
@@ -13,6 +14,7 @@ from weather.units import IMPERIAL, celsius_to_fahrenheit, ms_to_mph
 BASE_URL = "https://api.openweathermap.org"
 TIMEOUT_SECONDS = 5
 SEARCH_LIMIT = 5
+FORECAST_DAYS = 5
 CACHE_SECONDS = 10 * 60  # OpenWeather updates its data about every 10 minutes.
 
 # Emoji per OpenWeather icon group, so the browser never loads OpenWeather URLs.
@@ -27,6 +29,13 @@ ICON_EMOJI = {
     "13": "❄️",
     "50": "🌫️",
 }
+
+
+def icon_emoji(icon: str) -> str:
+    """Return an emoji for an OpenWeather icon code (e.g. "04d")."""
+    if icon == "01n":
+        return "🌙"
+    return ICON_EMOJI.get(icon[:2], "🌡️")
 
 
 class WeatherServiceError(Exception):
@@ -85,10 +94,8 @@ class CurrentWeather:
 
     @property
     def emoji(self) -> str:
-        """Return an emoji for the OpenWeather icon code (e.g. "04d")."""
-        if self.icon == "01n":
-            return "🌙"
-        return ICON_EMOJI.get(self.icon[:2], "🌡️")
+        """Return an emoji for this weather's icon."""
+        return icon_emoji(self.icon)
 
     def in_units(self, units: str) -> "CurrentWeather":
         """Return a copy with temperatures and wind in the given unit system."""
@@ -99,6 +106,32 @@ class CurrentWeather:
             temp=celsius_to_fahrenheit(self.temp),
             feels_like=celsius_to_fahrenheit(self.feels_like),
             wind_speed=ms_to_mph(self.wind_speed),
+        )
+
+
+@dataclass(frozen=True)
+class DailyForecast:
+    """One forecast day's high, low and main condition, in metric units."""
+
+    date: date
+    high: float
+    low: float
+    description: str
+    icon: str
+
+    @property
+    def emoji(self) -> str:
+        """Return an emoji for this day's icon."""
+        return icon_emoji(self.icon)
+
+    def in_units(self, units: str) -> "DailyForecast":
+        """Return a copy with the high and low in the given unit system."""
+        if units != IMPERIAL:
+            return self
+        return replace(
+            self,
+            high=celsius_to_fahrenheit(self.high),
+            low=celsius_to_fahrenheit(self.low),
         )
 
 
@@ -198,3 +231,36 @@ def get_current_weather(lat: float, lon: float) -> CurrentWeather:
         )
     except (KeyError, IndexError, TypeError):
         raise WeatherServiceError("OpenWeather sent unexpected weather data") from None
+
+
+def get_daily_forecast(lat: float, lon: float) -> list[DailyForecast]:
+    """Return up to 5 days of forecast highs, lows and conditions (metric)."""
+    data = _get_cached_json("/data/2.5/forecast", lat, lon)
+    try:
+        place_tz = timezone(timedelta(seconds=data["city"]["timezone"]))
+        steps_by_day: dict[date, list[dict]] = {}
+        for step in data["list"]:
+            day = datetime.fromtimestamp(step["dt"], place_tz).date()
+            steps_by_day.setdefault(day, []).append(step)
+        return [
+            _summarize_day(day, steps)
+            for day, steps in list(steps_by_day.items())[:FORECAST_DAYS]
+        ]
+    except (KeyError, IndexError, TypeError):
+        raise WeatherServiceError("OpenWeather sent unexpected forecast data") from None
+
+
+def _summarize_day(day: date, steps: list[dict]) -> DailyForecast:
+    """Combine one day's 3-hour steps into its high, low and main condition."""
+    temps = [step["main"]["temp"] for step in steps]
+    conditions = [step["weather"][0] for step in steps]
+    # The most frequent description wins; ties go to the earliest one.
+    description = Counter(c["description"] for c in conditions).most_common(1)[0][0]
+    icon = next(c["icon"] for c in conditions if c["description"] == description)
+    return DailyForecast(
+        date=day,
+        high=max(temps),
+        low=min(temps),
+        description=description,
+        icon=icon[:2] + "d",  # a day summary always uses the daytime icon
+    )

@@ -11,7 +11,7 @@ from pytest_django.asserts import (
 )
 
 from tests.factories import UserFactory
-from tests.openweather import WEATHER_URL, load_fixture
+from tests.openweather import FORECAST_URL, WEATHER_URL, load_fixture
 
 NEW_YORK = {"lat": "40.7484", "lon": "-73.9967"}
 
@@ -77,6 +77,12 @@ def test_panel_shows_metric_values_and_labels(client, mocked_responses, login):
     assertNotContains(response, "mph")
 
 
+def mock_weather_and_forecast(mocked_responses):
+    """Register the current weather and forecast responses for New York."""
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    mocked_responses.get(FORECAST_URL, json=load_fixture("forecast_new_york.json"))
+
+
 def switch_to_imperial(client):
     """POST the units toggle the way HTMX does."""
     return client.post(
@@ -86,31 +92,35 @@ def switch_to_imperial(client):
 
 @pytest.mark.django_db
 def test_logged_in_switch_persists_and_reuses_cached_weather(client, mocked_responses):
-    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    mock_weather_and_forecast(mocked_responses)
     user = UserFactory(units="metric")
     client.force_login(user)
     assertContains(get_panel(client), "6°C")
+    calls_for_first_panel = len(mocked_responses.calls)
 
     switch_to_imperial(client)
 
     user.refresh_from_db()
     assert user.units == "imperial"
     assertContains(get_panel(client), "44°F")
-    assert len(mocked_responses.calls) == 1  # second panel came from the cache
+    # The second panel came from the cache: no new OpenWeather calls.
+    assert len(mocked_responses.calls) == calls_for_first_panel
 
 
 @pytest.mark.django_db
 def test_anonymous_switch_is_stored_in_session_and_reuses_cached_weather(
     client, mocked_responses
 ):
-    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    mock_weather_and_forecast(mocked_responses)
     assertContains(get_panel(client), "6°C")
+    calls_for_first_panel = len(mocked_responses.calls)
 
     switch_to_imperial(client)
 
     assert client.session.get("units") == "imperial"
     assertContains(get_panel(client), "44°F")
-    assert len(mocked_responses.calls) == 1  # second panel came from the cache
+    # The second panel came from the cache: no new OpenWeather calls.
+    assert len(mocked_responses.calls) == calls_for_first_panel
 
 
 # The units endpoint

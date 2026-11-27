@@ -50,6 +50,30 @@
         <div class="stat-value text-2xl">{{ weather.sunset|time:"H:i" }}</div>
       </div>
     </div>
+    <section class="mt-4">
+      <h3 class="text-lg font-semibold">5-day forecast</h3>
+      {% if forecast_error %}
+      <div role="alert" class="alert alert-warning mt-2">{{ forecast_error }}</div>
+      {% elif forecast %}
+      <ul class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">
+        {% for day in forecast %}
+        <li class="rounded-box bg-base-200 p-3 text-center">
+          <p class="font-medium">{{ day.date|date:"D j M" }}</p>
+          <p class="text-3xl" aria-hidden="true">{{ day.emoji }}</p>
+          <p class="capitalize text-sm text-base-content/70">{{ day.description }}</p>
+          <p>
+            <span class="font-semibold">{{ day.high|floatformat:0 }}{{ temp_unit }}</span>
+            <span class="text-base-content/70">/ {{ day.low|floatformat:0 }}{{ temp_unit }}</span>
+          </p>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="relative h-64 mt-4">
+        <canvas id="forecast-chart" role="img" aria-label="Daily high and low temperatures for the next 5 days"></canvas>
+      </div>
+      {{ forecast_chart|json_script:"forecast-chart-data" }}
+      {% endif %}
+    </section>
     {% else %}
     <h2 class="card-title">Weather</h2>
     <p class="text-base-content/70">Pick a place to see its weather.</p>

@@ -12,3 +12,6 @@ WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
 def load_fixture(name: str):
     """Load a saved OpenWeather JSON response from tests/fixtures/."""
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+
+
+FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"

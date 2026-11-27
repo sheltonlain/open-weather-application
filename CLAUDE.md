@@ -56,6 +56,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 - Tests use a fake key via settings override, never the real one. Clear the cache between tests (autouse fixture). Use factory_boy for users and favorites.
 - Test users come from `tests/factories.py::UserFactory`; their password is `DEFAULT_PASSWORD`.
 - Shared OpenWeather test helpers (`load_fixture`, endpoint URL constants) live in `tests/openweather.py`; reuse them instead of redefining per test file.
+- The weather panel calls both `/data/2.5/weather` and `/data/2.5/forecast`. An unmocked forecast does not fail a test; it silently renders the "forecast unavailable" branch. Mock both when the forecast matters, and in cache tests compare call counts before and after a render rather than asserting a fixed number.
 
 ## 7. TDD Protocol (Red → Green → Refactor)
 Work in thin vertical slices: one behavior at a time, end to end.

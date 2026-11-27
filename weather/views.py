@@ -3,9 +3,11 @@ from django.shortcuts import render
 
 from weather.queries import parse_query
 from weather.services import (
+    DailyForecast,
     Place,
     WeatherServiceError,
     get_current_weather,
+    get_daily_forecast,
     search_cities,
     search_zip,
 )
@@ -13,6 +15,7 @@ from weather.units import METRIC, SPEED_LABELS, TEMP_LABELS, UNITS_SESSION_KEY
 
 SEARCH_ERROR_MESSAGE = "Search is unavailable right now. Please try again."
 WEATHER_ERROR_MESSAGE = "Weather is unavailable right now. Please try again."
+FORECAST_ERROR_MESSAGE = "Forecast is unavailable right now. Please try again."
 INVALID_LOCATION_MESSAGE = "That location is not valid. Please pick a place again."
 
 
@@ -60,6 +63,17 @@ def _parse_coordinates(params) -> tuple[float, float] | None:
     return None
 
 
+def _forecast_chart_data(forecast: list[DailyForecast], temp_unit: str) -> dict:
+    """Return the data the forecast chart needs, already in display units."""
+    return {
+        "labels": [f"{d.date:%a} {d.date.day} {d.date:%b}" for d in forecast],
+        "highs": [round(day.high, 1) for day in forecast],
+        "lows": [round(day.low, 1) for day in forecast],
+        "conditions": [day.description for day in forecast],
+        "unit": temp_unit,
+    }
+
+
 def weather_panel(request: HttpRequest) -> HttpResponse:
     """Show current weather for the lat/lon given in the query string."""
     template = "weather/partials/weather_panel.html"
@@ -78,6 +92,15 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
     except WeatherServiceError:
         error = WEATHER_ERROR_MESSAGE
 
+    # The forecast fails on its own: current conditions still show without it.
+    forecast = []
+    forecast_error = None
+    if weather:
+        try:
+            forecast = get_daily_forecast(*coordinates)
+        except WeatherServiceError:
+            forecast_error = FORECAST_ERROR_MESSAGE
+
     # Prefer the name the user picked: OpenWeather names its nearest station.
     name = request.GET.get("name", "").strip()
     if name:
@@ -90,9 +113,13 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
         place_label = ""
 
     units = active_units(request)
+    forecast = [day.in_units(units) for day in forecast]
     context = {
         "weather": weather.in_units(units) if weather else None,
         "error": error,
+        "forecast": forecast,
+        "forecast_chart": _forecast_chart_data(forecast, TEMP_LABELS[units]),
+        "forecast_error": forecast_error,
         "place_label": place_label,
         "temp_unit": TEMP_LABELS[units],
         "speed_unit": SPEED_LABELS[units],
