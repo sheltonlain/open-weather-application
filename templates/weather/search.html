@@ -3,11 +3,16 @@
 {% block title %}Search · Open Weather App{% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 shadow">
-  <div class="card-body space-y-4">
-    <h2 class="card-title">Search</h2>
-    {% include "weather/partials/search_form.html" %}
-    {% include "weather/partials/search_results.html" %}
-  </div>
+<div class="grid gap-4 lg:grid-cols-4">
+  <section class="lg:col-span-3">
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">Search</h2>
+        {% include "weather/partials/search_form.html" %}
+        {% include "weather/partials/search_results.html" %}
+      </div>
+    </div>
+  </section>
+  {% include "favorites/partials/sidebar.html" %}
 </div>
 {% endblock %}

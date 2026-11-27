@@ -1,0 +1,16 @@
+<aside id="favorites" class="card bg-base-100 shadow">
+  <div class="card-body">
+    <h2 class="card-title">Favorites</h2>
+    {% if user.is_authenticated %}
+    {% include "favorites/partials/favorites_list.html" with favorites=user.favorites.all %}
+    {% else %}
+    {# Save buttons target this list; anonymous saves are sent to login. #}
+    <div id="favorites-list">
+      <p class="text-base-content/70">
+        <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="link">Log in</a>
+        to save places and switch between them.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</aside>

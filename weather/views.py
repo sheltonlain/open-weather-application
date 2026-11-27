@@ -106,11 +106,11 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
     if name:
         state = request.GET.get("state", "").strip()
         country = request.GET.get("country", "").strip()
-        place_label = Place(name, state, country, *coordinates).label
+        place = Place(name, state, country, *coordinates)
     elif weather:
-        place_label = Place(weather.name, "", weather.country, *coordinates).label
+        place = Place(weather.name, "", weather.country, *coordinates)
     else:
-        place_label = ""
+        place = None
 
     units = active_units(request)
     forecast = [day.in_units(units) for day in forecast]
@@ -120,7 +120,7 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
         "forecast": forecast,
         "forecast_chart": _forecast_chart_data(forecast, TEMP_LABELS[units]),
         "forecast_error": forecast_error,
-        "place_label": place_label,
+        "place": place,
         "temp_unit": TEMP_LABELS[units],
         "speed_unit": SPEED_LABELS[units],
     }

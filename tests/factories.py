@@ -15,3 +15,17 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     username = factory.Sequence(lambda n: f"user{n}")
     password = factory.django.Password(DEFAULT_PASSWORD)
+
+
+class FavoriteFactory(factory.django.DjangoModelFactory):
+    """A saved place belonging to a new user."""
+
+    class Meta:
+        model = "favorites.Favorite"
+
+    user = factory.SubFactory(UserFactory)
+    name = "London"
+    state = "England"
+    country = "GB"
+    lat = factory.Sequence(lambda n: round(51.5073 + n / 1000, 4))
+    lon = -0.1276

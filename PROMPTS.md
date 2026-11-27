@@ -28,6 +28,24 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 8: favorites (save, list, switch, remove) (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md implement phase 8`
+2. "yes, go ahead" (the three TDD behaviors: duplicate save rejected cleanly after 4-decimal rounding, another user's favorite returns 404 on delete, anonymous HTMX save gets a login prompt)
+3. "yes, keep 200 and make it pass" (cycle 1 RED test; keep 200 rather than 409 for a duplicate save)
+4. "yes, make it pass" (cycle 2 RED test: deleting another user's favorite returns 404 and keeps it)
+5. "yes, go ahead with cycle 3"
+6. "yes, make it pass" (cycle 3 RED test: anonymous HTMX save returns `HX-Redirect` to `/accounts/login/?next=/`)
+7. "yes, go ahead with the rest of the phase"
+8. "manual verification passed, go ahead with the acceptance criteria"
+9. "yes, add both, then commit and push" (two CLAUDE.md lines)
+
+### Summary
+- **Outcome:** `favorites.Favorite` model and migration (4-decimal `DecimalField` lat/lon, `UniqueConstraint` on `(user, lat, lon)`, a `place` property that returns a `weather.services.Place`), `FavoriteForm`, admin registration, and `FavoriteFactory`. `POST /favorites/` rounds coordinates and uses `get_or_create`: 201 plus the updated list for a new place, 200 with "already in your favorites" for a duplicate, 400 for invalid input, and a redirect with a message when not HTMX. `GET /favorites/` returns the list partial or a full page. `DELETE /favorites/<id>/` uses `get_object_or_404(..., user=request.user)`. A new `login_required_htmx` decorator sends anonymous HTMX requests to login via `HX-Redirect`, with `next` taken from `HX-Current-URL`. A shared `favorites/partials/sidebar.html` is included on the dashboard, search, and weather pages; Save buttons appear on every search result and on the weather panel, whose context now passes `place` instead of `place_label`. New `tests/test_favorites.py` (21 tests). 144 tests pass, Ruff clean, all Phase 8 criteria ticked. CLAUDE.md §5.9 gained two lines (the HTMX login decorator; the sidebar include and the rule that `weather` reads favorites only through templates).
+- **Deviations:** Claude flagged the 200-vs-409 choice for duplicates (HTMX 2 doesn't swap 4xx); kept 200 as recommended. All other recommendations were accepted.
+- **Sideways:** Cycle 1's first draft would have crashed with an `IntegrityError` rather than failing an assertion, so the test uses `Client(raise_request_exception=False)` to make a 500 show up as a status code. Adding a `class` to the search-result `<li>` broke four existing tests that count bare `<li>` tags; the layout moved to an inner `div` instead of changing those tests. A bash heredoc for the regular tests failed on quoting, and the tests were written with the Edit tool instead. An invalid save (400) shows nothing in the sidebar because HTMX doesn't swap 4xx; accepted, since the hidden fields come from server data. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-26 — Phase 7: 5-day forecast chart (TDD)
 
 ### Prompts

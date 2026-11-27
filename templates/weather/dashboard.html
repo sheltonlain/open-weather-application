@@ -12,11 +12,6 @@
     </div>
     {% include "weather/partials/weather_panel.html" %}
   </section>
-  <aside id="favorites" class="card bg-base-100 shadow">
-    <div class="card-body">
-      <h2 class="card-title">Favorites</h2>
-      <p class="text-base-content/70">Your saved places will appear here.</p>
-    </div>
-  </aside>
+  {% include "favorites/partials/sidebar.html" %}
 </div>
 {% endblock %}

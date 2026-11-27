@@ -163,13 +163,13 @@ The `Favorite` model and migration. `POST /favorites/` saves a place from a sear
 
 ### Acceptance criteria
 
-- [ ] lat/lon are rounded to 4 decimals; a duplicate `(user, lat, lon)` is rejected cleanly (no 500), with clear feedback
-- [ ] Adding returns 201 (or the updated list partial) and the sidebar updates via HTMX
-- [ ] Clicking a favorite loads its weather from the stored coordinates
-- [ ] Deleting removes it and returns the updated list; another user's favorite returns 404
-- [ ] All favorites views require login; an anonymous HTMX save gets a login prompt instead of a broken swap
-- [ ] Lists and lookups are always scoped to `request.user` (tested with two users via factory_boy)
-- [ ] POST/DELETE without a CSRF token are rejected
+- [x] lat/lon are rounded to 4 decimals; a duplicate `(user, lat, lon)` is rejected cleanly (no 500), with clear feedback
+- [x] Adding returns 201 (or the updated list partial) and the sidebar updates via HTMX
+- [x] Clicking a favorite loads its weather from the stored coordinates
+- [x] Deleting removes it and returns the updated list; another user's favorite returns 404
+- [x] All favorites views require login; an anonymous HTMX save gets a login prompt instead of a broken swap
+- [x] Lists and lookups are always scoped to `request.user` (tested with two users via factory_boy)
+- [x] POST/DELETE without a CSRF token are rejected
 
 ---
 

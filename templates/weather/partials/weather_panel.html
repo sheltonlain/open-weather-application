@@ -15,8 +15,9 @@
     <div class="flex items-center gap-4">
       <span class="text-6xl" aria-hidden="true">{{ weather.emoji }}</span>
       <div>
-        <h2 class="card-title text-2xl">{{ place_label }}</h2>
+        <h2 class="card-title text-2xl">{{ place.label }}</h2>
         <p class="capitalize text-base-content/70">{{ weather.description }}</p>
+        {% include "favorites/partials/save_button.html" %}
       </div>
       <p class="ml-auto text-5xl font-bold">{{ weather.temp|floatformat:0 }}{{ temp_unit }}</p>
     </div>

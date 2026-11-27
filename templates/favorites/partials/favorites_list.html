@@ -1,0 +1,31 @@
+<div id="favorites-list">
+  {% if message %}
+  <div role="status" class="alert alert-info mb-2">{{ message }}</div>
+  {% endif %}
+  {% if favorites %}
+  <ul class="menu w-full rounded-box bg-base-200">
+    {% url 'weather' as weather_url %}
+    {% for favorite in favorites %}
+    <li class="flex flex-row items-center">
+      <a
+        class="flex-1"
+        href="{{ weather_url }}?{{ favorite.place.query_string }}"
+        hx-get="{{ weather_url }}?{{ favorite.place.query_string }}"
+        hx-target="#weather-panel"
+        hx-swap="outerHTML"
+      >{{ favorite.place.label }}</a>
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs"
+        aria-label="Remove {{ favorite.place.label }}"
+        hx-delete="{% url 'remove_favorite' favorite.pk %}"
+        hx-target="#favorites-list"
+        hx-swap="outerHTML"
+      >✕</button>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-base-content/70">No favorites yet. Use "Save" on a place to add it.</p>
+  {% endif %}
+</div>

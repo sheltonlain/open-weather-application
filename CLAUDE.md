@@ -44,6 +44,8 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 7. **Forecast:** Group 3-hour steps into daily high/low/condition in `services.py`; render with Chart.js via `json_script`.
 8. **Map:** Leaflet + OpenStreetMap tiles with weather markers (selected location + favorites). No weather tile overlays.
 9. **Favorites:** `Favorite(user, name, state, country, lat, lon, created_at)`; lat/lon rounded to 4 decimals; unique per `(user, lat, lon)`. Always filter by `request.user`; views require login.
+   - Protect favorites views with `favorites.views.login_required_htmx`, not plain `login_required`: a 302 makes HTMX swap the login page into the sidebar, so anonymous HTMX requests get `HX-Redirect` to login instead.
+   - Save buttons target `#favorites-list`, so every page that shows one must include `favorites/partials/sidebar.html`. `weather` reads favorites only via `user.favorites` in templates, never by importing the model.
 10. **Pages & HTMX:** `/` dashboard with HTMX partials: `GET /weather/search/?q=`, `GET /weather/?lat=&lon=`, `POST /favorites/`, `DELETE /favorites/<id>/`. Partial views also render full pages when not `request.htmx`. Send CSRF token via `hx-headers` in `base.html`. Use correct HTTP methods and status codes. Weather panel links carry `name`/`state`/`country` too (build them with `Place.query_string`): OpenWeather's `/data/2.5/weather` `name` is its nearest station, not the chosen place.
 
 ## 6. Testing Seams & Mocking

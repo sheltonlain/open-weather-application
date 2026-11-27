@@ -11,12 +11,16 @@
     {% for place in places %}
     {% url 'weather' as weather_url %}
     <li>
-      <a
-        href="{{ weather_url }}?{{ place.query_string }}"
-        hx-get="{{ weather_url }}?{{ place.query_string }}"
-        hx-target="#weather-panel"
-        hx-swap="outerHTML"
-      >{{ place.label }}</a>
+      <div class="flex items-center gap-2">
+        <a
+          class="flex-1"
+          href="{{ weather_url }}?{{ place.query_string }}"
+          hx-get="{{ weather_url }}?{{ place.query_string }}"
+          hx-target="#weather-panel"
+          hx-swap="outerHTML"
+        >{{ place.label }}</a>
+        {% include "favorites/partials/save_button.html" %}
+      </div>
     </li>
     {% endfor %}
   </ul>

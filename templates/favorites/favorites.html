@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Favorites · Open Weather App{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 shadow">
+  <div class="card-body">
+    <h2 class="card-title">Favorites</h2>
+    {% include "favorites/partials/favorites_list.html" %}
+  </div>
+</div>
+{% endblock %}
