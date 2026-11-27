@@ -11,6 +11,7 @@ from pytest_django.asserts import (
 )
 
 from tests.factories import UserFactory
+from tests.html import without_units_toggle
 from tests.openweather import FORECAST_URL, GEO_REVERSE_URL, WEATHER_URL, load_fixture
 
 NEW_YORK = {"lat": "40.7484", "lon": "-73.9967"}
@@ -49,8 +50,9 @@ def test_panel_shows_imperial_values_and_labels(client, mocked_responses, use_im
     assertContains(response, "44°F")  # 43.52 °F
     assertContains(response, "38°F")  # 37.58 °F
     assertContains(response, "10.3 mph")  # 10.29 mph
-    assertNotContains(response, "°C")
-    assertNotContains(response, "m/s")
+    values = without_units_toggle(response)
+    assert "°C" not in values
+    assert "m/s" not in values
 
 
 @pytest.mark.django_db
@@ -73,8 +75,9 @@ def test_panel_shows_metric_values_and_labels(client, mocked_responses, login):
     assertContains(response, "6°C")
     assertContains(response, "3°C")
     assertContains(response, "4.6 m/s")
-    assertNotContains(response, "°F")
-    assertNotContains(response, "mph")
+    values = without_units_toggle(response)
+    assert "°F" not in values
+    assert "mph" not in values
 
 
 def mock_weather_and_forecast(mocked_responses):
@@ -214,7 +217,7 @@ def test_normal_switch_never_redirects_off_site(client, next_url):
     assert response["Location"] == reverse("dashboard")
 
 
-# Header toggle, panel reload, account page
+# Summary card toggle, panel reload, account page
 
 
 def active_button(html, value):
@@ -224,14 +227,39 @@ def active_button(html, value):
 
 
 @pytest.mark.django_db
-def test_header_toggle_highlights_the_active_units(client):
+def test_summary_card_toggle_highlights_the_active_units(client, mocked_responses):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
     use_imperial_anonymous(client)
+
+    html = get_panel(client).content.decode()
+
+    # In the summary card's button group: after Save, before the temperature.
+    toggle = html.index('id="units-toggle"')
+    assert html.index("data-save-button") < toggle < html.index("text-7xl")
+    assert "btn-active" in active_button(html[toggle:], "imperial")
+    assert "btn-active" not in active_button(html[toggle:], "metric")
+
+
+@pytest.mark.django_db
+def test_summary_card_toggle_returns_to_the_panel_without_javascript(
+    client, mocked_responses
+):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+
+    response = get_panel(client)
+
+    assertContains(
+        response, 'name="next" value="/weather/?lat=40.7484&amp;lon=-73.9967"'
+    )
+
+
+@pytest.mark.django_db
+def test_navbar_has_no_units_toggle(client):
+    client.force_login(UserFactory())
 
     html = client.get(reverse("dashboard")).content.decode()
 
-    assert 'id="units-toggle"' in html
-    assert "btn-active" in active_button(html, "imperial")
-    assert "btn-active" not in active_button(html, "metric")
+    assert 'id="units-toggle"' not in html[: html.index("</header>")]
 
 
 @pytest.mark.django_db

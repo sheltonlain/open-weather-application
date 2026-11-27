@@ -18,7 +18,6 @@
       <a href="{% url 'dashboard' %}" class="btn btn-ghost text-xl"><span aria-hidden="true">🌤️</span> Open Weather</a>
     </div>
     <nav class="flex items-center gap-2">
-      {% include "accounts/partials/units_toggle.html" %}
       {% if user.is_authenticated %}
       {# One logout form; the menu buttons below submit it via form="logout-form". #}
       <form id="logout-form" method="post" action="{% url 'logout' %}">{% csrf_token %}</form>

@@ -9,6 +9,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
 
 from tests.factories import UserFactory
+from tests.html import without_units_toggle
 from tests.openweather import FORECAST_URL, GEO_REVERSE_URL, WEATHER_URL, load_fixture
 from weather.services import DailyForecast, get_daily_forecast
 
@@ -144,7 +145,7 @@ def test_chart_data_and_day_cards_use_imperial_for_imperial_users(
     assert data["lows"][0] == 36.3
     assert data["lows"][4] == 29.8
     assertContains(response, "46°F")  # first day card high
-    assertNotContains(response, "°C")
+    assert "°C" not in without_units_toggle(response)
 
 
 @pytest.mark.django_db
