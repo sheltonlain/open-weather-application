@@ -18,6 +18,8 @@
           hx-get="{{ weather_url }}?{{ place.query_string }}"
           hx-target="#weather-panel"
           hx-swap="outerHTML"
+          hx-indicator="#weather-panel"
+          hx-on::after-request="if (event.detail.successful) document.getElementById('search-results').replaceChildren()"
         >{{ place.label }}</a>
         {% include "favorites/partials/save_button.html" %}
       </div>

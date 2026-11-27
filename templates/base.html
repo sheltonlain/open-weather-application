@@ -162,7 +162,11 @@
 
       function loadPanel(url) {
         if (userPickedPlace) return; // don't replace the place the user chose
-        htmx.ajax("GET", url, { target: "#weather-panel", swap: "outerHTML" });
+        htmx.ajax("GET", url, {
+          source: "#weather-panel", // the panel shows its loading style
+          target: "#weather-panel",
+          swap: "outerHTML",
+        });
       }
 
       function onPosition(position) {

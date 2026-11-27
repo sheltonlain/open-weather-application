@@ -1,12 +1,14 @@
 <div
   id="weather-panel"
-  class="space-y-4"
+  class="relative space-y-4 transition-opacity [&.htmx-request]:opacity-50"
   {% if weather %}
   hx-get="{{ request.get_full_path }}"
   hx-trigger="unitsChanged from:body"
   hx-swap="outerHTML"
   {% endif %}
 >
+  {# Hidden until HTMX adds "htmx-request" to the panel while it loads. #}
+  <span class="loading loading-spinner loading-lg absolute left-1/2 top-16 z-10 -translate-x-1/2 hidden in-[.htmx-request]:inline-block" aria-hidden="true"></span>
   {% if error %}
   <div class="card bg-base-100 shadow">
     <div class="card-body">

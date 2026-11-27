@@ -175,6 +175,7 @@ def test_clicking_a_favorite_loads_weather_from_its_stored_coordinates(
     )
     assertContains(sidebar, f'hx-get="{url}"')
     assertContains(sidebar, 'hx-target="#weather-panel"')
+    assertContains(sidebar, 'hx-indicator="#weather-panel"')
 
     # Following that link calls the weather API only: no re-geocoding.
     mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))

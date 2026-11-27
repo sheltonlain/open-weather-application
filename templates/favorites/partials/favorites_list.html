@@ -13,6 +13,7 @@
         hx-get="{{ weather_url }}?{{ favorite.place.query_string }}"
         hx-target="#weather-panel"
         hx-swap="outerHTML"
+        hx-indicator="#weather-panel"
       >{{ favorite.place.label }}</a>
       <button
         type="button"

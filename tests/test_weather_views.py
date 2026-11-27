@@ -206,3 +206,15 @@ def test_dashboard_has_htmx_search_box(client):
     assertContains(response, 'hx-target="#search-results"')
     assertContains(response, 'name="q"')
     assertContains(response, 'id="search-results"')
+
+
+@pytest.mark.django_db
+def test_search_result_links_show_loading_and_clear_results(client, mocked_responses):
+    mocked_responses.get(GEO_DIRECT_URL, json=load_fixture("geo_direct_london.json"))
+
+    response = search(client, "London")
+
+    # The weather panel dims while it loads, and the results list empties once
+    # the chosen place's weather has loaded.
+    assertContains(response, 'hx-indicator="#weather-panel"')
+    assertContains(response, "hx-on::after-request=")
