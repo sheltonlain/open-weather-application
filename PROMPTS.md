@@ -28,6 +28,53 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Banners, My account, units toggle, map pins, and sliding sidebar
+
+### Prompts
+1. "Let's talk about UI improvements. For banners that pop up when you save to favorites, or the banner that says a place is already in your favorites, those should not stay on the screen when you select another location from your favorites list. How can we fix this?"
+2. "yes" (go ahead with option 1: clear `data-flash` banners in the browser when a new place loads)
+3. "let's combine settings and account as a tab in the navbar. Call it my account, and include a page with account information and C/F preferences. Also make it so that the navbar reads," Hi, name""
+4. "can we take the c/f toggle out of the navbar and put it somewhere on the card?"
+5. Sent mid-task, after Claude put the toggle beside the big temperature: "I don't like it there. Can we put it next to the save and default buttons?"
+6. "Can we make the marker on the map something else? Like a location pin and when you toggle over it, the weather details show?"
+7. "remove the hint that says Click 🏠 to open the app on that place."
+8. "can we make it so that the favorites sidebar slides in and out from the side?"
+9. "Push / collapse panel" (answer to: overlay drawer or push/collapse panel)
+10. "make the collapse button bigger"
+11. "when the panel is collapsed, put show favorites or something so you know that's what the button does"
+12. "what ui changes can we make to stylize the favorites tab more"
+13. "do 1, 2, 3 5, 6, and 7" (two-line rows, weather chips, selected/default rows, header count, empty state, logged-out state)
+14. "put a star next to show favorites"
+15. "update PROMPTS.md and CLAUDE.md as necessary"
+
+### Summary
+- **Outcome:** 10 commits (`8558277` to `2b55084`), 229 tests pass, Ruff clean, not pushed.
+  - **Banners:** save and flash banners carry `data-flash` and are removed when you pick another place. Automatic loads (default location, current position) leave them, so the post-login "Saved" flash stays readable.
+  - **My account:** the Settings page became "My account" at `/accounts/`. It shows username, name, member since, saved places and default location, plus the °C/°F form. The navbar says "Hi, {first name or username}" and highlights the tab on that page. `/accounts/settings/` is gone (404).
+  - **Units toggle:** moved from the navbar into the summary card's button group, next to 🏠 and Save.
+  - **Map:** temperature badges became SVG pins (primary for the selected place, neutral for favorites). Weather details show in a tooltip on hover, tap or focus.
+  - **Sidebar:**
+    - The "Click 🏠…" hint is gone.
+    - Dashboard, search and weather pages share `favorites/sidebar_layout.html`.
+    - On wide screens the sidebar collapses to a strip with a large «, a gold ★ and "Show favorites"; the choice is remembered in the browser.
+    - Rows show the name over the region, with a weather chip colored like the summary card (the shared `weather/partials/theme_classes.html`).
+    - The viewed row gets a primary left bar, the default is listed first with 🏠, the header shows "★ Favorites" with a live count, and the empty and logged-out states are friendlier.
+  - **CLAUDE.md:** rules for `data-flash` banners, My account and the greeting, toggle placement, map pins and `invalidateSize()`, the sidebar layout and `default_first`, the `data-favorites-count` sync, the shared theme partial, and two testing pitfalls (`without_units_toggle`, JS selectors inflating counts).
+- **Deviations:**
+  - Chose the push/collapse sidebar over Claude's recommended overlay drawer.
+  - Rejected the first toggle spot (beside the temperature) mid-task; it went next to Save and 🏠 instead.
+  - Picked styling items 1, 2, 3, 5, 6 and 7. Skipped 4 (show the row buttons only on hover) and 8 (sticky sidebar).
+  - Claude asked whether to add an optional first-name field so the greeting can use a real name. Not answered; registration still asks only for a username.
+  - Claude decided on its own to drop the old `/accounts/settings/` URL without a redirect.
+- **Sideways:**
+  - Two "never shows the other unit" tests broke once the toggle moved into the panel, because its own °C/°F labels count. Claude kept the assertions and ran them on the panel with the toggle cut out (`tests/html.py`) rather than delete them.
+  - Count assertions on `data-flash` and `data-sidebar-toggle` first matched the JS selectors in `base.html` too. Claude scoped the tests to the element.
+  - A renamed `accounts/settings.html` path made `git add` fail, so the first My account commit held only the rename; Claude amended it (unpushed).
+  - A PowerShell edit turned `$nldef` into an empty variable and put a line break inside a test string, breaking the test file until fixed with Edit.
+  - A commit message containing double quotes was split by PowerShell; it was re-committed with single quotes.
+  - Map pins, the sidebar slide, banner clearing, the live count and the selected-row bar are browser JavaScript and CSS with no automated tests. Only the HTML they read is tested, and Claude checked none of it in a browser.
+  - `requirements.md` is still untracked and was left out of every commit.
+
 ## 2026-11-26 — UI redesign, favorites polish, and default location
 
 ### Prompts
