@@ -1,12 +1,14 @@
 """OpenWeather client: the only module that talks to the OpenWeather API."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, time, timedelta, timezone
 from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
 from django.core.cache import cache
+
+from weather.units import IMPERIAL, celsius_to_fahrenheit, ms_to_mph
 
 BASE_URL = "https://api.openweathermap.org"
 TIMEOUT_SECONDS = 5
@@ -87,6 +89,17 @@ class CurrentWeather:
         if self.icon == "01n":
             return "🌙"
         return ICON_EMOJI.get(self.icon[:2], "🌡️")
+
+    def in_units(self, units: str) -> "CurrentWeather":
+        """Return a copy with temperatures and wind in the given unit system."""
+        if units != IMPERIAL:
+            return self
+        return replace(
+            self,
+            temp=celsius_to_fahrenheit(self.temp),
+            feels_like=celsius_to_fahrenheit(self.feels_like),
+            wind_speed=ms_to_mph(self.wind_speed),
+        )
 
 
 def _get_json(path: str, params: dict) -> list | dict:

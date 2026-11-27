@@ -1,0 +1,24 @@
+<form
+  id="units-toggle"
+  method="post"
+  action="{% url 'set_units' %}"
+  hx-post="{% url 'set_units' %}"
+  hx-target="this"
+  hx-swap="outerHTML"
+  class="join"
+>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ units_next|default:request.get_full_path }}">
+  <button
+    type="submit" name="units" value="metric"
+    class="btn btn-sm join-item {% if active_units == 'metric' %}btn-active btn-neutral{% endif %}"
+    aria-pressed="{% if active_units == 'metric' %}true{% else %}false{% endif %}"
+    title="Metric (°C, m/s)"
+  >°C</button>
+  <button
+    type="submit" name="units" value="imperial"
+    class="btn btn-sm join-item {% if active_units == 'imperial' %}btn-active btn-neutral{% endif %}"
+    aria-pressed="{% if active_units == 'imperial' %}true{% else %}false{% endif %}"
+    title="Imperial (°F, mph)"
+  >°F</button>
+</form>

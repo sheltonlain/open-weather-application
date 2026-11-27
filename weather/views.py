@@ -9,10 +9,18 @@ from weather.services import (
     search_cities,
     search_zip,
 )
+from weather.units import METRIC, SPEED_LABELS, TEMP_LABELS, UNITS_SESSION_KEY
 
 SEARCH_ERROR_MESSAGE = "Search is unavailable right now. Please try again."
 WEATHER_ERROR_MESSAGE = "Weather is unavailable right now. Please try again."
 INVALID_LOCATION_MESSAGE = "That location is not valid. Please pick a place again."
+
+
+def active_units(request: HttpRequest) -> str:
+    """Return the unit system for this request: user setting, session, or metric."""
+    if request.user.is_authenticated:
+        return request.user.units
+    return request.session.get(UNITS_SESSION_KEY, METRIC)
 
 
 def dashboard(request: HttpRequest) -> HttpResponse:
@@ -81,5 +89,12 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
     else:
         place_label = ""
 
-    context = {"weather": weather, "error": error, "place_label": place_label}
+    units = active_units(request)
+    context = {
+        "weather": weather.in_units(units) if weather else None,
+        "error": error,
+        "place_label": place_label,
+        "temp_unit": TEMP_LABELS[units],
+        "speed_unit": SPEED_LABELS[units],
+    }
     return render(request, template, context)

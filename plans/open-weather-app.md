@@ -127,11 +127,11 @@ Pure conversion functions (°C to °F, m/s to mph). A settings page lets logged-
 
 ### Acceptance criteria
 
-- [ ] Conversion helpers are unit-tested, including edge values
-- [ ] A logged-in user's choice persists on `User.units` across sessions
-- [ ] An anonymous visitor defaults to metric, and their toggle is stored in the session
-- [ ] The weather panel shows the correct values and unit labels for each setting
-- [ ] Switching units doesn't trigger an outbound HTTP call when the data is cached
+- [x] Conversion helpers are unit-tested, including edge values
+- [x] A logged-in user's choice persists on `User.units` across sessions
+- [x] An anonymous visitor defaults to metric, and their toggle is stored in the session
+- [x] The weather panel shows the correct values and unit labels for each setting
+- [x] Switching units doesn't trigger an outbound HTTP call when the data is cached
 
 ---
 

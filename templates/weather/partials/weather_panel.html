@@ -1,4 +1,12 @@
-<div id="weather-panel" class="card bg-base-100 shadow">
+<div
+  id="weather-panel"
+  class="card bg-base-100 shadow"
+  {% if weather %}
+  hx-get="{{ request.get_full_path }}"
+  hx-trigger="unitsChanged from:body"
+  hx-swap="outerHTML"
+  {% endif %}
+>
   <div class="card-body">
     {% if error %}
     <h2 class="card-title">Weather</h2>
@@ -10,12 +18,12 @@
         <h2 class="card-title text-2xl">{{ place_label }}</h2>
         <p class="capitalize text-base-content/70">{{ weather.description }}</p>
       </div>
-      <p class="ml-auto text-5xl font-bold">{{ weather.temp|floatformat:0 }}°C</p>
+      <p class="ml-auto text-5xl font-bold">{{ weather.temp|floatformat:0 }}{{ temp_unit }}</p>
     </div>
     <div class="stats stats-vertical sm:stats-horizontal shadow mt-4 flex-wrap">
       <div class="stat">
         <div class="stat-title">Feels like</div>
-        <div class="stat-value text-2xl">{{ weather.feels_like|floatformat:0 }}°C</div>
+        <div class="stat-value text-2xl">{{ weather.feels_like|floatformat:0 }}{{ temp_unit }}</div>
       </div>
       <div class="stat">
         <div class="stat-title">Humidity</div>
@@ -23,7 +31,7 @@
       </div>
       <div class="stat">
         <div class="stat-title">Wind</div>
-        <div class="stat-value text-2xl">{{ weather.wind_speed|floatformat:1 }} m/s</div>
+        <div class="stat-value text-2xl">{{ weather.wind_speed|floatformat:1 }} {{ speed_unit }}</div>
       </div>
       <div class="stat">
         <div class="stat-title">Cloudiness</div>

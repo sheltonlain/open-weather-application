@@ -28,6 +28,25 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 6: units preference (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md Implement phase 6`
+2. "Yes" (the three TDD behaviors: conversion helpers, the panel renders in the active units, switching units saves the choice and makes no new OpenWeather call)
+3. "yes" (cycle 1 RED test: `celsius_to_fahrenheit` and `ms_to_mph` tables, including -40 and 0)
+4. "yes" (move on to cycle 2)
+5. "yes" (cycle 2 RED test: an imperial user, logged in or via the session, sees 44°F / 38°F / 10.3 mph and no °C or m/s)
+6. "yes" (move on to cycle 3)
+7. "yes" (cycle 3 RED tests: switching to imperial saves `User.units` or `session["units"]`, and the re-rendered panel makes only one HTTP call in total)
+8. "yes" (build the rest of the phase: header toggle, panel reload, settings page, regular tests)
+9. "yes" (manual verification steps all passed)
+10. "yes" (add the two proposed lines on active units and switching to CLAUDE.md)
+
+### Summary
+- **Outcome:** New pure module `weather/units.py` (°C→°F, m/s→mph, unit labels, session key). `CurrentWeather.in_units()` converts the cached metric data for display, so switching never calls OpenWeather again. `weather.views.active_units()` picks the user setting, then the session, then metric, and a new context processor exposes it to every template. New `POST /accounts/units/` (`set_units`) validates the value (400 if unknown), requires POST and a CSRF token, and saves to `User.units` or the session. For HTMX it re-renders the header °C/°F toggle and sends `HX-Trigger: unitsChanged`; otherwise it shows a "Units saved." message and redirects to a same-site `next` URL. The weather panel listens for `unitsChanged` and re-fetches its own URL. New login-required settings page at `/accounts/settings/`, a Settings link in the header, and message display in `base.html`. 115 tests pass, Ruff clean, all Phase 6 criteria ticked. CLAUDE.md now documents the active-units and switching patterns.
+- **Deviations:** None. I accepted every recommendation. Claude chose to have the settings page post to the same `set_units` endpoint instead of having its own form view, and to have the toggle endpoint return the re-rendered toggle (200) instead of the 204 it described during cycle 3; neither was raised with me.
+- **Sideways:** In cycle 3 the anonymous test first failed with a `KeyError` instead of an assertion; switched to `session.get(...)` (mechanical repair, noted before approval). A scripted string replacement in `accounts/views.py` didn't match after Ruff reformatting and also clipped a line; it was caught by inspecting the file and fixed by hand. One new settings-page test first matched the header toggle's `value="imperial"` instead of the radio button and was fixed to target the radio. `requirements.md` is still untracked and was left out of the commit.
+
 ## 2026-11-26 — Phase 5: current weather panel (TDD)
 
 ### Prompts

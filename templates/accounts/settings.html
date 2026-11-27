@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Settings · Open Weather App{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 shadow max-w-md mx-auto">
+  <div class="card-body">
+    <h1 class="card-title text-2xl">Settings</h1>
+    <form method="post" action="{% url 'set_units' %}" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'settings' %}">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Units</legend>
+        {% for value, label in unit_choices %}
+        <label class="label cursor-pointer gap-2">
+          <input type="radio" name="units" value="{{ value }}" class="radio"
+                 {% if value == active_units %}checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" class="btn btn-primary w-full">Save</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -36,6 +36,8 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 1. **Auth:** Django session auth with custom `accounts.User(AbstractUser)` and a `units` field (`metric`/`imperial`). Set `AUTH_USER_MODEL` before the first migration. Anonymous users default to metric (stored in session).
 2. **OpenWeather client:** Use a 5s timeout; raise `WeatherServiceError` on failure and show a friendly message.
 3. **Units:** Always fetch `units=metric`; convert to imperial in `weather/units.py` (pure functions).
+   - **Active units:** `weather.views.active_units(request)` (user setting → session → metric); every template gets it as `active_units`. Convert for display with `CurrentWeather.in_units(units)` and label with `TEMP_LABELS`/`SPEED_LABELS` from `weather/units.py`. Never re-fetch data to change units.
+   - **Switching:** `POST /accounts/units/` saves the choice and fires the HTMX event `unitsChanged`. Any panel showing unit-dependent values listens with `hx-trigger="unitsChanged from:body"` and re-fetches its own URL.
 4. **Caching:** Django local-memory cache, 10 min TTL, key = endpoint + lat/lon rounded to 4 decimals.
 5. **Search:** One box. `parse_query()` treats input starting with digits as ZIP (default country `US`, e.g. `10001,US`); a letter-first postcode is a ZIP only with a 2-letter country code (e.g. `SW1A 1AA,GB`); otherwise city via `/geo/1.0/direct`. ZIPs use `/geo/1.0/zip`; its 404 means "no results", not a service error. Always show results as a list (name, state, country) with a save button.
 6. **Geolocation:** If browser permission is already granted, auto-detect; else show a "Use my location" button. Fallback: first favorite or the search box. Reverse-geocode on the backend.
