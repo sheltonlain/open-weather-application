@@ -38,6 +38,28 @@ def icon_emoji(icon: str) -> str:
     return ICON_EMOJI.get(icon[:2], "🌡️")
 
 
+# Display theme per OpenWeather icon group; templates pick colors per theme.
+ICON_THEME = {
+    "01": "clear",
+    "02": "clear",
+    "03": "clouds",
+    "04": "clouds",
+    "09": "rain",
+    "10": "rain",
+    "11": "storm",
+    "13": "snow",
+    "50": "mist",
+}
+
+
+def weather_theme(icon: str) -> str:
+    """Return a display theme ("clear", "rain", ...) for an OpenWeather icon code."""
+    theme = ICON_THEME.get(icon[:2], "clouds")
+    if theme == "clear" and icon.endswith("n"):
+        return "night"
+    return theme
+
+
 class WeatherServiceError(Exception):
     """OpenWeather could not be reached or returned an unusable response."""
 
@@ -96,6 +118,11 @@ class CurrentWeather:
     def emoji(self) -> str:
         """Return an emoji for this weather's icon."""
         return icon_emoji(self.icon)
+
+    @property
+    def theme(self) -> str:
+        """Return the display theme for this weather's icon."""
+        return weather_theme(self.icon)
 
     def in_units(self, units: str) -> "CurrentWeather":
         """Return a copy with temperatures and wind in the given unit system."""

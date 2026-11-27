@@ -11,6 +11,7 @@ from weather.services import (
     get_current_weather,
     search_cities,
     search_zip,
+    weather_theme,
 )
 
 
@@ -154,3 +155,24 @@ def test_failed_weather_request_is_not_cached(mocked_responses):
 
     assert weather.name == "Weehawken"
     assert len(mocked_responses.calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("icon", "theme"),
+    [
+        ("01d", "clear"),
+        ("02d", "clear"),
+        ("01n", "night"),
+        ("02n", "night"),
+        ("03d", "clouds"),
+        ("04n", "clouds"),
+        ("09d", "rain"),
+        ("10n", "rain"),
+        ("11d", "storm"),
+        ("13d", "snow"),
+        ("50d", "mist"),
+        ("99d", "clouds"),
+    ],
+)
+def test_weather_theme_groups_icons_by_condition(icon, theme):
+    assert weather_theme(icon) == theme

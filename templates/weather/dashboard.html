@@ -3,13 +3,12 @@
 {% block content %}
 <div class="grid gap-4 lg:grid-cols-4">
   <section class="lg:col-span-3 space-y-4">
-    <div id="search" class="card bg-base-100 shadow">
-      <div class="card-body space-y-4">
-        <h2 class="card-title">Search</h2>
-        {% include "weather/partials/search_form.html" %}
+    <div id="search" class="space-y-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex-1 min-w-64">{% include "weather/partials/search_form.html" %}</div>
         {% include "weather/partials/geolocation.html" %}
-        {% include "weather/partials/search_results.html" %}
       </div>
+      {% include "weather/partials/search_results.html" %}
     </div>
     {% include "weather/partials/weather_panel.html" %}
   </section>

@@ -2,12 +2,12 @@
   {% if error %}
   <div role="alert" class="alert alert-warning">{{ error }}</div>
   {% elif not query %}
-  <p class="text-base-content/70">
-    Type a city name or ZIP code to search. For postcodes outside the US, add a
-    country code, e.g. <code>SW1A 1AA,GB</code>.
+  <p class="text-xs text-base-content/60 px-1">
+    Type a city name or ZIP code to search. Outside the US, add a country code,
+    e.g. <code>SW1A 1AA,GB</code>.
   </p>
   {% elif places %}
-  <ul class="menu w-full rounded-box bg-base-200">
+  <ul class="menu w-full rounded-box bg-base-100 shadow">
     {% for place in places %}
     {% url 'weather' as weather_url %}
     <li>
@@ -25,6 +25,6 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-base-content/70">No results found for "{{ query }}".</p>
+  <p class="text-sm text-base-content/70 px-1">No results found for "{{ query }}".</p>
   {% endif %}
 </div>

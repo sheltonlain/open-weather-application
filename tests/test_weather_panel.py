@@ -221,3 +221,13 @@ def test_reverse_geocode_failure_labels_weather_with_coordinates(
     assertContains(response, "6°C")  # the weather still shows
     assertContains(response, "40.7484, -73.9967")
     assertNotContains(response, "Weehawken")
+
+
+@pytest.mark.django_db
+def test_panel_is_themed_by_current_condition(client, mocked_responses):
+    # Fixture condition: "broken clouds" (icon 04d).
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+
+    response = get_panel(client, NEW_YORK)
+
+    assertContains(response, 'data-weather-theme="clouds"')

@@ -1,91 +1,120 @@
 <div
   id="weather-panel"
-  class="card bg-base-100 shadow"
+  class="space-y-4"
   {% if weather %}
   hx-get="{{ request.get_full_path }}"
   hx-trigger="unitsChanged from:body"
   hx-swap="outerHTML"
   {% endif %}
 >
-  <div class="card-body">
-    {% if error %}
-    <h2 class="card-title">Weather</h2>
-    <div role="alert" class="alert alert-warning">{{ error }}</div>
-    {% elif weather %}
-    <div class="flex items-center gap-4">
-      <span class="text-6xl" aria-hidden="true">{{ weather.emoji }}</span>
-      <div>
+  {% if error %}
+  <div class="card bg-base-100 shadow">
+    <div class="card-body">
+      <h2 class="card-title">Weather</h2>
+      <div role="alert" class="alert alert-warning">{{ error }}</div>
+    </div>
+  </div>
+  {% elif weather %}
+  {# Summary: the background color follows the current condition. #}
+  <div
+    data-weather-theme="{{ weather.theme }}"
+    class="card shadow bg-linear-to-br
+      {% if weather.theme == 'clear' %}from-amber-300 to-sky-400 text-slate-900
+      {% elif weather.theme == 'night' %}from-indigo-950 to-slate-700 text-white
+      {% elif weather.theme == 'rain' %}from-sky-700 to-slate-600 text-white
+      {% elif weather.theme == 'storm' %}from-slate-800 to-purple-900 text-white
+      {% elif weather.theme == 'snow' %}from-sky-50 to-slate-300 text-slate-900
+      {% elif weather.theme == 'mist' %}from-slate-200 to-zinc-400 text-slate-900
+      {% else %}from-slate-300 to-slate-500 text-slate-900{% endif %}"
+  >
+    <div class="card-body">
+      <div class="flex items-start justify-between gap-2">
         <h2 class="card-title text-2xl">{{ place.label }}</h2>
-        <p class="capitalize text-base-content/70">{{ weather.description }}</p>
         {% include "favorites/partials/save_button.html" %}
       </div>
-      <p class="ml-auto text-5xl font-bold">{{ weather.temp|floatformat:0 }}{{ temp_unit }}</p>
-    </div>
-    <div class="stats stats-vertical sm:stats-horizontal shadow mt-4 flex-wrap">
-      <div class="stat">
-        <div class="stat-title">Feels like</div>
-        <div class="stat-value text-2xl">{{ weather.feels_like|floatformat:0 }}{{ temp_unit }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Humidity</div>
-        <div class="stat-value text-2xl">{{ weather.humidity }}%</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Wind</div>
-        <div class="stat-value text-2xl">{{ weather.wind_speed|floatformat:1 }} {{ speed_unit }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Cloudiness</div>
-        <div class="stat-value text-2xl">{{ weather.clouds }}%</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Pressure</div>
-        <div class="stat-value text-2xl">{{ weather.pressure }} hPa</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Sunrise</div>
-        <div class="stat-value text-2xl">{{ weather.sunrise|time:"H:i" }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Sunset</div>
-        <div class="stat-value text-2xl">{{ weather.sunset|time:"H:i" }}</div>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <span class="text-8xl" aria-hidden="true">{{ weather.emoji }}</span>
+        <div>
+          <p class="text-7xl font-bold">{{ weather.temp|floatformat:0 }}{{ temp_unit }}</p>
+          <p class="text-lg capitalize">{{ weather.description }}</p>
+          <p class="opacity-80">Feels like {{ weather.feels_like|floatformat:0 }}{{ temp_unit }}</p>
+        </div>
       </div>
     </div>
-    <section class="mt-4">
-      <h3 class="text-lg font-semibold">5-day forecast</h3>
-      {% if forecast_error %}
-      <div role="alert" class="alert alert-warning mt-2">{{ forecast_error }}</div>
-      {% elif forecast %}
-      <ul class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">
-        {% for day in forecast %}
-        <li class="rounded-box bg-base-200 p-3 text-center">
-          <p class="font-medium">{{ day.date|date:"D j M" }}</p>
-          <p class="text-3xl" aria-hidden="true">{{ day.emoji }}</p>
-          <p class="capitalize text-sm text-base-content/70">{{ day.description }}</p>
-          <p>
-            <span class="font-semibold">{{ day.high|floatformat:0 }}{{ temp_unit }}</span>
-            <span class="text-base-content/70">/ {{ day.low|floatformat:0 }}{{ temp_unit }}</span>
-          </p>
-        </li>
-        {% endfor %}
-      </ul>
-      <div class="relative h-64 mt-4">
-        <canvas id="forecast-chart" role="img" aria-label="Daily high and low temperatures for the next 5 days"></canvas>
-      </div>
-      {{ forecast_chart|json_script:"forecast-chart-data" }}
-      {% endif %}
-    </section>
-    <section class="mt-4">
-      <h3 class="text-lg font-semibold">Map</h3>
-      {# "relative z-0" keeps Leaflet's layers below the page's menus. #}
-      {# No id on purpose: HTMX "settles" attributes of elements whose id matches #}
-      {# the old panel's, which would strip Leaflet's classes after a swap. #}
-      <div data-weather-map class="relative z-0 h-80 mt-2 rounded-box" role="region" aria-label="Map around {{ place.label }}"></div>
-      {{ map_data|json_script:"weather-map-data" }}
-    </section>
-    {% else %}
-    <h2 class="card-title">Weather</h2>
-    <p class="text-base-content/70">Pick a place to see its weather.</p>
-    {% endif %}
   </div>
+
+  <ul class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4" aria-label="Weather details">
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">💧</span> Humidity</p>
+      <p class="text-xl font-semibold">{{ weather.humidity }}%</p>
+    </li>
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">💨</span> Wind</p>
+      <p class="text-xl font-semibold">{{ weather.wind_speed|floatformat:1 }} {{ speed_unit }}</p>
+    </li>
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">☁️</span> Cloudiness</p>
+      <p class="text-xl font-semibold">{{ weather.clouds }}%</p>
+    </li>
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">🧭</span> Pressure</p>
+      <p class="text-xl font-semibold">{{ weather.pressure }} hPa</p>
+    </li>
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">🌅</span> Sunrise</p>
+      <p class="text-xl font-semibold">{{ weather.sunrise|time:"H:i" }}</p>
+    </li>
+    <li class="rounded-box bg-base-100 shadow p-4">
+      <p class="text-sm text-base-content/70"><span aria-hidden="true">🌇</span> Sunset</p>
+      <p class="text-xl font-semibold">{{ weather.sunset|time:"H:i" }}</p>
+    </li>
+  </ul>
+
+  <div class="grid gap-4 xl:grid-cols-2">
+    <section class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h3 class="card-title">5-day forecast</h3>
+        {% if forecast_error %}
+        <div role="alert" class="alert alert-warning">{{ forecast_error }}</div>
+        {% elif forecast %}
+        <ul class="divide-y divide-base-200">
+          {% for day in forecast %}
+          <li class="flex items-center gap-3 py-2">
+            <span class="w-24 font-medium">{{ day.date|date:"D j M" }}</span>
+            <span class="text-2xl" aria-hidden="true">{{ day.emoji }}</span>
+            <span class="flex-1 capitalize text-sm text-base-content/70">{{ day.description }}</span>
+            <span>
+              <span class="font-semibold">{{ day.high|floatformat:0 }}{{ temp_unit }}</span>
+              <span class="text-base-content/70">/ {{ day.low|floatformat:0 }}{{ temp_unit }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="relative h-56 mt-2">
+          <canvas id="forecast-chart" role="img" aria-label="Daily high and low temperatures for the next 5 days"></canvas>
+        </div>
+        {{ forecast_chart|json_script:"forecast-chart-data" }}
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h3 class="card-title">Map</h3>
+        {# "relative z-0" keeps Leaflet's layers below the page's menus. #}
+        {# No id on purpose: HTMX "settles" attributes of elements whose id matches #}
+        {# the old panel's, which would strip Leaflet's classes after a swap. #}
+        <div data-weather-map class="relative z-0 flex-1 min-h-80 rounded-box" role="region" aria-label="Map around {{ place.label }}"></div>
+        {{ map_data|json_script:"weather-map-data" }}
+      </div>
+    </section>
+  </div>
+  {% else %}
+  <div class="card bg-base-100 shadow">
+    <div class="card-body">
+      <h2 class="card-title">Weather</h2>
+      <p class="text-base-content/70">Pick a place to see its weather.</p>
+    </div>
+  </div>
+  {% endif %}
 </div>
