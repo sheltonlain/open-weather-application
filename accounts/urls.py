@@ -4,6 +4,7 @@ from django.urls import path
 from accounts import views
 
 urlpatterns = [
+    path("", views.account, name="account"),
     path("register/", views.register, name="register"),
     path(
         "login/",
@@ -11,6 +12,5 @@ urlpatterns = [
         name="login",
     ),
     path("units/", views.set_units, name="set_units"),
-    path("settings/", views.settings, name="settings"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 ]

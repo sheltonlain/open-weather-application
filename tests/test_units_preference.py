@@ -196,7 +196,7 @@ def test_normal_switch_shows_saved_message(client):
 
     response = client.post(
         reverse("set_units"),
-        {"units": "imperial", "next": reverse("settings")},
+        {"units": "imperial", "next": reverse("account")},
         follow=True,
     )
 
@@ -214,7 +214,7 @@ def test_normal_switch_never_redirects_off_site(client, next_url):
     assert response["Location"] == reverse("dashboard")
 
 
-# Header toggle, panel reload, settings page
+# Header toggle, panel reload, account page
 
 
 def active_button(html, value):
@@ -245,18 +245,18 @@ def test_panel_reloads_itself_when_units_change(client, mocked_responses):
 
 
 @pytest.mark.django_db
-def test_settings_page_requires_login(client):
-    response = client.get(reverse("settings"))
+def test_account_page_requires_login(client):
+    response = client.get(reverse("account"))
 
     assert response.status_code == 302
     assert response["Location"].startswith(reverse("login"))
 
 
 @pytest.mark.django_db
-def test_settings_page_shows_the_saved_choice(client):
+def test_account_page_shows_the_saved_choice(client):
     client.force_login(UserFactory(units="imperial"))
 
-    response = client.get(reverse("settings"))
+    response = client.get(reverse("account"))
 
     assert response.status_code == 200
     html = response.content.decode()
@@ -267,23 +267,24 @@ def test_settings_page_shows_the_saved_choice(client):
 
 
 @pytest.mark.django_db
-def test_settings_form_saves_units(client):
+def test_account_form_saves_units(client):
     user = UserFactory(units="metric")
     client.force_login(user)
 
     response = client.post(
-        reverse("set_units"), {"units": "imperial", "next": reverse("settings")}
+        reverse("set_units"), {"units": "imperial", "next": reverse("account")}
     )
 
-    assert response["Location"] == reverse("settings")
+    assert response["Location"] == reverse("account")
     user.refresh_from_db()
     assert user.units == "imperial"
 
 
 @pytest.mark.django_db
-def test_header_links_to_settings_for_logged_in_users_only(client):
-    assertNotContains(client.get(reverse("dashboard")), reverse("settings"))
+def test_header_links_to_account_for_logged_in_users_only(client):
+    account_link = f'href="{reverse("account")}"'
+    assertNotContains(client.get(reverse("dashboard")), account_link)
 
     client.force_login(UserFactory())
 
-    assertContains(client.get(reverse("dashboard")), reverse("settings"))
+    assertContains(client.get(reverse("dashboard")), account_link)

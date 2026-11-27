@@ -18,7 +18,7 @@ Open Weather App: an educational Django web app giving users current weather, mu
 ## 3. Project Structure
 ```
 config/            # settings, root urls
-accounts/          # custom User (units field), register/login/settings
+accounts/          # custom User (units field), register/login, "My account" page (/accounts/)
 weather/           # services.py (OpenWeather client), units.py, queries.py (parse_query), search/weather views
 favorites/         # Favorite model, add/remove/list views
 templates/         # base.html + per-app full pages and partials/

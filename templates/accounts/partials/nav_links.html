@@ -1,6 +1,10 @@
 {% if user.is_authenticated %}
-<li class="menu-title">{{ user.username }}</li>
-<li><a href="{% url 'settings' %}">Settings</a></li>
+<li class="menu-title">Hi, {{ user.first_name|default:user.username }}</li>
+{% if request.resolver_match.url_name == "account" %}
+<li><a href="{% url 'account' %}" class="menu-active" aria-current="page">My account</a></li>
+{% else %}
+<li><a href="{% url 'account' %}">My account</a></li>
+{% endif %}
 <li><button type="submit" form="logout-form">Log out</button></li>
 {% else %}
 <li><a href="{% url 'login' %}">Log in</a></li>

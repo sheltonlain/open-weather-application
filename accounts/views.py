@@ -53,8 +53,11 @@ def set_units(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def settings(request: HttpRequest) -> HttpResponse:
-    """Show the unit preference form; it posts to set_units."""
-    return render(
-        request, "accounts/settings.html", {"unit_choices": User.Units.choices}
-    )
+def account(request: HttpRequest) -> HttpResponse:
+    """Show the user's account details and unit preference form."""
+    context = {
+        "unit_choices": User.Units.choices,
+        "favorite_count": request.user.favorites.count(),
+        "default_favorite": request.user.favorites.default(),
+    }
+    return render(request, "accounts/account.html", context)
