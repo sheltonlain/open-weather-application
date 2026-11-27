@@ -87,11 +87,11 @@
     // Text is set with textContent, so place names are never treated as HTML.
     let weatherMap = null;
 
-    function weatherPopup(marker) {
-      const popup = document.createElement("div");
+    function weatherDetails(marker) {
+      const details = document.createElement("div");
       const title = document.createElement("strong");
       title.textContent = marker.label;
-      popup.append(title);
+      details.append(title);
       const lines = marker.temp === null
         ? ["Weather unavailable"]
         : [
@@ -103,20 +103,32 @@
       for (const text of lines) {
         const line = document.createElement("div");
         line.textContent = text;
-        popup.append(line);
+        details.append(line);
       }
-      return popup;
+      return details;
     }
 
-    function addWeatherMarker(marker, badgeClass) {
-      const badge = document.createElement("span");
-      badge.className = "badge " + badgeClass + " shadow whitespace-nowrap -translate-x-1/2 -translate-y-1/2";
-      badge.textContent = marker.temp === null
-        ? "❔ " + marker.label
-        : marker.emoji + " " + Math.round(marker.temp) + marker.unit;
-      const icon = L.divIcon({ html: badge, className: "", iconSize: null });
-      return L.marker([marker.lat, marker.lon], { icon: icon, title: marker.label })
-        .bindPopup(weatherPopup(marker))
+    // A map pin drawn in SVG; its color comes from a Tailwind text-* class.
+    function pinIcon(marker, colorClass) {
+      const pin = document.createElement("span");
+      pin.className = "block drop-shadow " + colorClass;
+      pin.setAttribute("role", "img");
+      pin.setAttribute("aria-label", marker.label);
+      pin.innerHTML =
+        '<svg viewBox="0 0 24 36" class="h-9 w-6" aria-hidden="true">' +
+        '<path fill="currentColor" stroke="white" stroke-width="1.5" ' +
+        'd="M12 1C6.2 1 1.5 5.7 1.5 11.5 1.5 19.5 12 35 12 35s10.5-15.5 10.5-23.5C22.5 5.7 17.8 1 12 1z"/>' +
+        '<circle cx="12" cy="11.5" r="4" fill="white"/></svg>';
+      // The pin's tip (bottom middle) sits on the place.
+      return L.divIcon({
+        html: pin, className: "", iconSize: [24, 36], iconAnchor: [12, 36], tooltipAnchor: [0, -34],
+      });
+    }
+
+    // Hovering (or tapping, or focusing) a pin shows that place's weather.
+    function addWeatherMarker(marker, colorClass) {
+      return L.marker([marker.lat, marker.lon], { icon: pinIcon(marker, colorClass) })
+        .bindTooltip(weatherDetails(marker), { direction: "top" })
         .addTo(weatherMap);
     }
 
@@ -140,9 +152,9 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(weatherMap);
       for (const favorite of data.favorites) {
-        addWeatherMarker(favorite, "badge-neutral");
+        addWeatherMarker(favorite, "text-neutral");
       }
-      addWeatherMarker(data.selected, "badge-primary").setZIndexOffset(1000);
+      addWeatherMarker(data.selected, "text-primary").setZIndexOffset(1000);
     }
     document.addEventListener("DOMContentLoaded", drawWeatherMap);
     document.body.addEventListener("htmx:afterSettle", drawWeatherMap);
