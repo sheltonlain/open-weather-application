@@ -47,3 +47,12 @@ def test_sidebar_toggle_starts_open_and_names_what_it_controls(client):
     assert 'aria-expanded="true"' in toggle
     assert 'aria-label="Hide favorites"' in toggle
     assert 'id="favorites-body"' in html
+
+
+@pytest.mark.django_db
+def test_sidebar_toggle_has_a_visible_show_favorites_label(client):
+    html = client.get(reverse("dashboard")).content.decode()
+
+    start = html.index("data-sidebar-toggle")
+    button = html[start : html.index("</button>", start)]
+    assert ">Show favorites</span>" in button

@@ -12,7 +12,7 @@
         <button
           type="button"
           data-sidebar-toggle
-          class="btn btn-ghost btn-square text-2xl hidden lg:inline-flex"
+          class="btn btn-ghost btn-square text-2xl hidden lg:inline-flex lg:group-data-[collapsed]/sidebar:h-auto lg:group-data-[collapsed]/sidebar:flex-col lg:group-data-[collapsed]/sidebar:gap-3 lg:group-data-[collapsed]/sidebar:py-3"
           aria-controls="favorites-body"
           aria-expanded="true"
           aria-label="Hide favorites"
@@ -20,6 +20,8 @@
         >
           <span aria-hidden="true" class="lg:group-data-[collapsed]/sidebar:hidden">»</span>
           <span aria-hidden="true" class="hidden lg:group-data-[collapsed]/sidebar:inline">«</span>
+          {# Collapsed, the button becomes a tall tab with this label running down it. #}
+          <span aria-hidden="true" class="hidden text-sm font-semibold [writing-mode:vertical-rl] lg:group-data-[collapsed]/sidebar:inline">Show favorites</span>
         </button>
         <h2 class="card-title lg:group-data-[collapsed]/sidebar:invisible">Favorites</h2>
       </div>
