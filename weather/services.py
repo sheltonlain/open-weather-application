@@ -153,13 +153,13 @@ def _get_json(path: str, params: dict) -> list | dict:
         raise WeatherServiceError(f"OpenWeather request to {path} failed") from None
 
 
-def _get_cached_json(path: str, lat: float, lon: float) -> dict:
-    """GET a lat/lon endpoint in metric units, cached by endpoint and position."""
+def _get_cached_json(path: str, lat: float, lon: float, **params) -> list | dict:
+    """GET a lat/lon endpoint, cached by endpoint and position."""
     lat, lon = round(lat, 4), round(lon, 4)
     key = f"openweather:{path}:{lat:.4f}:{lon:.4f}"
     data = cache.get(key)
     if data is None:
-        data = _get_json(path, {"lat": lat, "lon": lon, "units": "metric"})
+        data = _get_json(path, {"lat": lat, "lon": lon, **params})
         cache.set(key, data, CACHE_SECONDS)
     return data
 
@@ -203,6 +203,24 @@ def search_zip(zip_query: str) -> list[Place]:
     ]
 
 
+def reverse_geocode(lat: float, lon: float) -> Place | None:
+    """Return the named place at the given coordinates, or None if there is none."""
+    data = _get_cached_json("/geo/1.0/reverse", lat, lon, limit=1)
+    if not data:
+        return None
+    try:
+        item = data[0]
+        return Place(
+            name=item["name"],
+            state=item.get("state", ""),
+            country=item.get("country", ""),
+            lat=lat,
+            lon=lon,
+        )
+    except (KeyError, IndexError, TypeError):
+        raise WeatherServiceError("OpenWeather sent unexpected place data") from None
+
+
 def _local_time(timestamp: int, utc_offset_seconds: int) -> time:
     """Return the wall-clock time at a place for a UTC Unix timestamp."""
     place_tz = timezone(timedelta(seconds=utc_offset_seconds))
@@ -211,7 +229,7 @@ def _local_time(timestamp: int, utc_offset_seconds: int) -> time:
 
 def get_current_weather(lat: float, lon: float) -> CurrentWeather:
     """Return current weather at the given coordinates (metric units)."""
-    data = _get_cached_json("/data/2.5/weather", lat, lon)
+    data = _get_cached_json("/data/2.5/weather", lat, lon, units="metric")
     try:
         condition = data["weather"][0]
         offset = data["timezone"]
@@ -235,7 +253,7 @@ def get_current_weather(lat: float, lon: float) -> CurrentWeather:
 
 def get_daily_forecast(lat: float, lon: float) -> list[DailyForecast]:
     """Return up to 5 days of forecast highs, lows and conditions (metric)."""
-    data = _get_cached_json("/data/2.5/forecast", lat, lon)
+    data = _get_cached_json("/data/2.5/forecast", lat, lon, units="metric")
     try:
         place_tz = timezone(timedelta(seconds=data["city"]["timezone"]))
         steps_by_day: dict[date, list[dict]] = {}

@@ -41,8 +41,11 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 4. **Caching:** Django local-memory cache, 10 min TTL, key = endpoint + lat/lon rounded to 4 decimals.
 5. **Search:** One box. `parse_query()` treats input starting with digits as ZIP (default country `US`, e.g. `10001,US`); a letter-first postcode is a ZIP only with a 2-letter country code (e.g. `SW1A 1AA,GB`); otherwise city via `/geo/1.0/direct`. ZIPs use `/geo/1.0/zip`; its 404 means "no results", not a service error. Always show results as a list (name, state, country) with a save button.
 6. **Geolocation:** If browser permission is already granted, auto-detect; else show a "Use my location" button. Fallback: first favorite or the search box. Reverse-geocode on the backend.
+   - The inline script in `base.html` reads `data-geolocation`, `data-weather-url` and `data-fallback-url` (first favorite's panel URL) from `weather/partials/geolocation.html`.
+   - A panel request without `name` is labeled by `/geo/1.0/reverse`, else by its coordinates; never by OpenWeather's station name.
 7. **Forecast:** Group 3-hour steps into daily high/low/condition in `services.py`; render with Chart.js via `json_script`.
 8. **Map:** Leaflet + OpenStreetMap tiles with weather markers (selected location + favorites). No weather tile overlays.
+   - Keep `referrerPolicy: "strict-origin-when-cross-origin"` on the OSM tile layer: Django's default `same-origin` policy sends no Referer, and OSM then serves "Access blocked" tiles.
 9. **Favorites:** `Favorite(user, name, state, country, lat, lon, created_at)`; lat/lon rounded to 4 decimals; unique per `(user, lat, lon)`. Always filter by `request.user`; views require login.
    - Protect favorites views with `favorites.views.login_required_htmx`, not plain `login_required`: a 302 makes HTMX swap the login page into the sidebar, so anonymous HTMX requests get `HX-Redirect` to login instead.
    - Save buttons target `#favorites-list`, so every page that shows one must include `favorites/partials/sidebar.html`. `weather` reads favorites only via `user.favorites` (in templates, or `request.user.favorites` in views, e.g. map markers), never by importing the model.
@@ -59,6 +62,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
 - Tests use a fake key via settings override, never the real one. Clear the cache between tests (autouse fixture). Use factory_boy for users and favorites.
 - Test users come from `tests/factories.py::UserFactory`; their password is `DEFAULT_PASSWORD`.
 - Shared OpenWeather test helpers (`load_fixture`, endpoint URL constants) live in `tests/openweather.py`; reuse them instead of redefining per test file.
+- A panel request without `name` also calls `/geo/1.0/reverse` (`GEO_REVERSE_URL`); mock it in cache/call-count tests too.
 - The weather panel calls both `/data/2.5/weather` and `/data/2.5/forecast`. An unmocked forecast does not fail a test; it silently renders the "forecast unavailable" branch. Mock both when the forecast matters, and in cache tests compare call counts before and after a render rather than asserting a fixed number.
 
 ## 7. TDD Protocol (Red → Green → Refactor)

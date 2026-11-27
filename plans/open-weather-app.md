@@ -201,7 +201,7 @@ On dashboard load, a small inline script checks the Permissions API. If geolocat
 
 ### Acceptance criteria
 
-- [ ] The weather panel shows a reverse-geocoded place name for coordinates without a known name
-- [ ] A reverse-geocode failure still shows the weather, labeled with the coordinates
-- [ ] With no granted permission, the button is shown and no permission prompt appears on load
-- [ ] The fallback loads the first favorite for logged-in users who have one; otherwise the search hint shows
+- [x] The weather panel shows a reverse-geocoded place name for coordinates without a known name
+- [x] A reverse-geocode failure still shows the weather, labeled with the coordinates
+- [x] With no granted permission, the button is shown and no permission prompt appears on load
+- [x] The fallback loads the first favorite for logged-in users who have one; otherwise the search hint shows

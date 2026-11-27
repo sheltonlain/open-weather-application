@@ -1,6 +1,7 @@
 """Tests for the current weather panel (GET /weather/?lat=&lon=)."""
 
 import pytest
+import requests
 from django.urls import reverse
 from pytest_django.asserts import (
     assertContains,
@@ -10,7 +11,12 @@ from pytest_django.asserts import (
 )
 from responses import matchers
 
-from tests.openweather import GEO_DIRECT_URL, WEATHER_URL, load_fixture
+from tests.openweather import (
+    GEO_DIRECT_URL,
+    GEO_REVERSE_URL,
+    WEATHER_URL,
+    load_fixture,
+)
 
 NEW_YORK = {"lat": "40.7484", "lon": "-73.9967"}
 
@@ -176,9 +182,42 @@ def test_panel_shows_the_chosen_place_name_not_the_station_name(
 
 
 @pytest.mark.django_db
-def test_panel_without_a_name_falls_back_to_openweather_name(client, mocked_responses):
+def test_panel_without_a_name_shows_the_reverse_geocoded_name(client, mocked_responses):
     mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    mocked_responses.get(
+        GEO_REVERSE_URL,
+        json=load_fixture("geo_reverse_new_york.json"),
+        match=[
+            matchers.query_param_matcher(
+                {**NEW_YORK, "limit": "1", "appid": "test-openweather-key"}
+            )
+        ],
+    )
 
     response = get_panel(client, NEW_YORK)
 
-    assertContains(response, "Weehawken, US")
+    assertContains(response, "New York, New York, US")
+    assertNotContains(response, "Weehawken")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "reverse_response",
+    [
+        pytest.param({"body": requests.exceptions.Timeout()}, id="timeout"),
+        pytest.param({"status": 500}, id="server-error"),
+        pytest.param({"json": []}, id="no-place-found"),
+    ],
+)
+def test_reverse_geocode_failure_labels_weather_with_coordinates(
+    client, mocked_responses, reverse_response
+):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+    mocked_responses.get(GEO_REVERSE_URL, **reverse_response)
+
+    response = get_panel(client, NEW_YORK)
+
+    assert response.status_code == 200
+    assertContains(response, "6°C")  # the weather still shows
+    assertContains(response, "40.7484, -73.9967")
+    assertNotContains(response, "Weehawken")

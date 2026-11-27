@@ -1,0 +1,18 @@
+{% url 'weather' as weather_url %}
+{# The geolocation script in base.html reads these data-* attributes. #}
+{# The button and hint start hidden: the script decides which one to show. #}
+<div
+  data-geolocation
+  data-weather-url="{{ weather_url }}"
+  {% if user.is_authenticated %}{% with first=user.favorites.first %}{% if first %}
+  data-fallback-url="{{ weather_url }}?{{ first.place.query_string }}"
+  {% endif %}{% endwith %}{% endif %}
+  class="flex flex-wrap items-center gap-2"
+>
+  <button type="button" data-geolocation-button class="btn btn-outline btn-sm hidden">
+    📍 Use my location
+  </button>
+  <p data-geolocation-hint role="status" class="text-sm text-base-content/70 hidden">
+    We couldn't get your location. Search for a city or ZIP code above.
+  </p>
+</div>

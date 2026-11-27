@@ -9,7 +9,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
 
 from tests.factories import UserFactory
-from tests.openweather import FORECAST_URL, WEATHER_URL, load_fixture
+from tests.openweather import FORECAST_URL, GEO_REVERSE_URL, WEATHER_URL, load_fixture
 from weather.services import DailyForecast, get_daily_forecast
 
 NEW_YORK = (40.7484, -73.9967)
@@ -82,9 +82,12 @@ def test_forecast_failure_still_shows_current_conditions(client, mocked_response
 
 
 def mock_new_york(mocked_responses):
-    """Register the New York current weather and forecast responses."""
+    """Register the New York weather, forecast and place-name responses."""
     mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
     mocked_responses.get(FORECAST_URL, json=load_fixture("forecast_new_york.json"))
+    mocked_responses.get(
+        GEO_REVERSE_URL, json=load_fixture("geo_reverse_new_york.json")
+    )
 
 
 def get_panel(client, htmx=True):
@@ -177,7 +180,8 @@ def test_forecast_uses_the_cache_and_never_leaks_the_api_key(client, mocked_resp
     first = get_panel(client)
     second = get_panel(client, htmx=False)
 
-    assert len(mocked_responses.calls) == 2  # one weather + one forecast call
+    # One call each: weather, forecast and reverse geocode.
+    assert len(mocked_responses.calls) == 3
     for response in (first, second):
         assertNotContains(response, "test-openweather-key")
         assertNotContains(response, "openweathermap.org")

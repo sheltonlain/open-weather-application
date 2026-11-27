@@ -28,6 +28,27 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-26 — Phase 10: geolocation and fallback (TDD)
+
+### Prompts
+1. `/implement @prd/open-weather-app.md @plans/open-weather-app.md implement phase 10`
+2. "Yes, replace that test" (approved the three TDD behaviors: reverse-geocoded name, coordinates label on reverse-geocode failure, dashboard fallback to the first favorite; and replacing the old station-name test)
+3. "yes, make it pass" (cycle 1 RED test: a panel without a name shows the reverse-geocoded name)
+4. "yes, go ahead with cycle 2"
+5. "yes, make it pass" (cycle 2 RED test: timeout / 500 / empty reverse result labels the weather with its coordinates)
+6. "yes, go ahead with cycle 3"
+7. "yes, make it pass" (cycle 3 RED test: `data-fallback-url` points at the first favorite only when there is one)
+8. "yes, build the UI and script"
+9. "in chrome, the app says access is blocked"
+10. "the map i mean"
+11. "manual verification passes. Proceed"
+12. "yes, update CLAUDE.md and proceed"
+
+### Summary
+- **Outcome:** `weather.services.reverse_geocode()` (cached like other lat/lon calls) names panels loaded without a `name`; on failure or no result the panel is labeled with its coordinates instead of OpenWeather's station name. The dashboard gained `weather/partials/geolocation.html` (a "Use my location" button, a search hint, and `data-fallback-url` for the first favorite) and an inline script in `base.html` that auto-locates only when permission is already granted and otherwise falls back to the first favorite or the hint. Fixed a Phase 9 map bug: OSM served "Access blocked" tiles because Django's `same-origin` referrer policy sent no Referer; the tile layer now uses `referrerPolicy: "strict-origin-when-cross-origin"`. CLAUDE.md gained notes on the geolocation data attributes, place labeling, the OSM referrer policy, and mocking `/geo/1.0/reverse`. 160 tests pass.
+- **Deviations:** the user approved replacing `test_panel_without_a_name_falls_back_to_openweather_name`, since Phase 10 changes that requirement. Three cache tests were repaired to mock the reverse endpoint, and the forecast cache test now expects 3 first-render calls instead of 2.
+- **Sideways:** the cycle 1 test first used the wrong fake API key (`test-api-key` instead of `test-openweather-key`), fixed mechanically. A scripted edit inserted the reverse mock into the wrong test in `tests/test_forecast.py`; caught by a still-failing call count and moved into `mock_new_york`. During manual verification the user reported "access is blocked"; I first assumed it was Chrome's location permission and gave Windows/Chrome settings advice before the user clarified it was the map, which led to the OSM Referer fix. The browser script has no automated tests (no JS runner); its behavior was confirmed manually. Known gap: a silent location lookup that finishes after the user picks a search result can replace the panel.
+
 ## 2026-11-26 — Phase 9: map with selected and favorite markers (TDD)
 
 ### Prompts

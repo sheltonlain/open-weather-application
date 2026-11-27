@@ -15,3 +15,4 @@ def load_fixture(name: str):
 
 
 FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
+GEO_REVERSE_URL = "https://api.openweathermap.org/geo/1.0/reverse"

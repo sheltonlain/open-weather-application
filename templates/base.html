@@ -126,6 +126,9 @@
       weatherMap = L.map(container).setView([data.selected.lat, data.selected.lon], 10);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
+        // OSM blocks tiles sent without a Referer, and Django's default policy
+        // ("same-origin") sends none to other sites. Send only our origin.
+        referrerPolicy: "strict-origin-when-cross-origin",
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(weatherMap);
       for (const favorite of data.favorites) {
@@ -135,6 +138,67 @@
     }
     document.addEventListener("DOMContentLoaded", drawWeatherMap);
     document.body.addEventListener("htmx:afterSettle", drawWeatherMap);
+
+    // Load weather for the browser's position. Only asks for permission when
+    // the user clicks "Use my location"; if it was granted before, it runs
+    // silently on page load. On denial or error it falls back to the first
+    // favorite, or shows a hint pointing at the search box.
+    function setUpGeolocation() {
+      const box = document.querySelector("[data-geolocation]");
+      if (!box) return;
+      const button = box.querySelector("[data-geolocation-button]");
+      const hint = box.querySelector("[data-geolocation-hint]");
+
+      function loadPanel(url) {
+        htmx.ajax("GET", url, { target: "#weather-panel", swap: "outerHTML" });
+      }
+
+      function onPosition(position) {
+        hint.classList.add("hidden");
+        // Round to 4 decimals (about 11 m), the same as the weather cache.
+        const params = new URLSearchParams({
+          lat: position.coords.latitude.toFixed(4),
+          lon: position.coords.longitude.toFixed(4),
+        });
+        loadPanel(box.dataset.weatherUrl + "?" + params);
+      }
+
+      function onFailure() {
+        if (box.dataset.fallbackUrl) {
+          loadPanel(box.dataset.fallbackUrl);
+        } else {
+          hint.classList.remove("hidden");
+        }
+      }
+
+      function locate() {
+        navigator.geolocation.getCurrentPosition(onPosition, onFailure, {
+          timeout: 10000,
+          maximumAge: 10 * 60 * 1000,
+        });
+      }
+
+      if (!navigator.geolocation) {
+        onFailure();
+        return;
+      }
+      button.addEventListener("click", locate);
+      const showButton = () => button.classList.remove("hidden");
+      if (!navigator.permissions) {
+        showButton();
+        return;
+      }
+      navigator.permissions.query({ name: "geolocation" }).then((status) => {
+        if (status.state === "granted") {
+          locate();
+        } else if (status.state === "denied") {
+          onFailure();
+        } else {
+          showButton();
+        }
+      }, showButton);
+    }
+    document.addEventListener("DOMContentLoaded", setUpGeolocation);
   </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ from weather.services import (
     WeatherServiceError,
     get_current_weather,
     get_daily_forecast,
+    reverse_geocode,
     search_cities,
     search_zip,
 )
@@ -130,6 +131,22 @@ def _map_data(
     }
 
 
+def _panel_place(params, lat: float, lon: float) -> Place:
+    """Return the place to show: the chosen name, its reverse geocode, or lat/lon."""
+    # Prefer the name the user picked: OpenWeather names its nearest station.
+    name = params.get("name", "").strip()
+    if name:
+        state = params.get("state", "").strip()
+        country = params.get("country", "").strip()
+        return Place(name, state, country, lat, lon)
+    try:
+        place = reverse_geocode(lat, lon)
+    except WeatherServiceError:
+        place = None
+    # Unknown place: label it by position, not by OpenWeather's station.
+    return place or Place(f"{lat:.4f}, {lon:.4f}", "", "", lat, lon)
+
+
 def weather_panel(request: HttpRequest) -> HttpResponse:
     """Show current weather for the lat/lon given in the query string."""
     template = "weather/partials/weather_panel.html"
@@ -157,16 +174,7 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
         except WeatherServiceError:
             forecast_error = FORECAST_ERROR_MESSAGE
 
-    # Prefer the name the user picked: OpenWeather names its nearest station.
-    name = request.GET.get("name", "").strip()
-    if name:
-        state = request.GET.get("state", "").strip()
-        country = request.GET.get("country", "").strip()
-        place = Place(name, state, country, *coordinates)
-    elif weather:
-        place = Place(weather.name, "", weather.country, *coordinates)
-    else:
-        place = None
+    place = _panel_place(request.GET, *coordinates) if weather else None
 
     units = active_units(request)
     forecast = [day.in_units(units) for day in forecast]
