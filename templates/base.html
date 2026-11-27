@@ -151,7 +151,8 @@
     // Load weather for the browser's position. Only asks for permission when
     // the user clicks "Use my location"; if it was granted before, it runs
     // silently on page load. On denial or error it falls back to the first
-    // favorite, or shows a hint pointing at the search box.
+    // favorite, or shows a hint pointing at the search box. A default location
+    // (chosen with 🏠 in the sidebar) loads instead of auto-detecting.
     // If the user picks a place (search result, favorite) while the browser is
     // still finding the position, their choice wins and the lookup is ignored.
     function setUpGeolocation() {
@@ -212,6 +213,13 @@
       }
       button.addEventListener("click", locate);
       const showButton = () => button.classList.remove("hidden");
+      if (box.dataset.defaultUrl) {
+        // The user's default location wins over their current position;
+        // the button still lets them switch to where they are.
+        loadPanel(box.dataset.defaultUrl);
+        showButton();
+        return;
+      }
       if (!navigator.permissions) {
         showButton();
         return;

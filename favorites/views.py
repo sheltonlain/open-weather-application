@@ -16,6 +16,7 @@ from favorites.services import (
     PENDING_FAVORITE_SESSION_KEY,
     save_favorite,
     saved_message,
+    set_default_favorite,
 )
 
 INVALID_FAVORITE_MESSAGE = "That place could not be saved. Please try again."
@@ -84,4 +85,17 @@ def remove_favorite(request: HttpRequest, pk: int) -> HttpResponse:
     """Delete one of the user's favorites; anyone else's is a 404."""
     favorite = get_object_or_404(Favorite, pk=pk, user=request.user)
     favorite.delete()
+    return _render_list(request)
+
+
+@login_required_htmx
+@require_http_methods(["POST", "DELETE"])
+def default_favorite(request: HttpRequest, pk: int) -> HttpResponse:
+    """Make one of the user's favorites the default (POST) or clear it (DELETE)."""
+    favorite = get_object_or_404(Favorite, pk=pk, user=request.user)
+    if request.method == "POST":
+        set_default_favorite(favorite)
+    else:
+        favorite.is_default = False
+        favorite.save(update_fields=["is_default"])
     return _render_list(request)

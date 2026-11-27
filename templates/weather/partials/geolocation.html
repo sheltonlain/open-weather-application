@@ -1,12 +1,16 @@
 {% url 'weather' as weather_url %}
 {# The geolocation script in base.html reads these data-* attributes. #}
+{# data-default-url: the user's default favorite, loaded on open. #}
+{# data-fallback-url: the default, else the first favorite. #}
 {# The button and hint start hidden: the script decides which one to show. #}
 <div
   data-geolocation
   data-weather-url="{{ weather_url }}"
-  {% if user.is_authenticated %}{% with first=user.favorites.first %}{% if first %}
-  data-fallback-url="{{ weather_url }}?{{ first.place.query_string }}"
-  {% endif %}{% endwith %}{% endif %}
+  {% if user.is_authenticated %}{% with home=user.favorites.default %}
+  {% if home %}data-default-url="{{ weather_url }}?{{ home.place.query_string }}"{% endif %}
+  {% with fallback=home|default:user.favorites.first %}{% if fallback %}
+  data-fallback-url="{{ weather_url }}?{{ fallback.place.query_string }}"
+  {% endif %}{% endwith %}{% endwith %}{% endif %}
   class="flex flex-wrap items-center gap-2"
 >
   <button type="button" data-geolocation-button class="btn btn-outline btn-lg bg-base-100 hidden">

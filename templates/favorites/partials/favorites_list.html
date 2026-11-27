@@ -24,6 +24,30 @@
         hx-trigger="load, unitsChanged from:body"
         hx-swap="innerHTML"
       ><span class="loading loading-dots loading-xs" aria-label="Loading weather"></span></span>
+      {% url 'default_favorite' favorite.pk as default_url %}
+      {% if favorite.is_default %}
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs"
+        aria-pressed="true"
+        aria-label="{{ favorite.place.label }} is your default location; clear it"
+        title="Default location (click to clear)"
+        hx-delete="{{ default_url }}"
+        hx-target="#favorites-list"
+        hx-swap="outerHTML"
+      >🏠</button>
+      {% else %}
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs opacity-30 hover:opacity-100 focus-visible:opacity-100"
+        aria-pressed="false"
+        aria-label="Make {{ favorite.place.label }} your default location"
+        title="Make this your default location"
+        hx-post="{{ default_url }}"
+        hx-target="#favorites-list"
+        hx-swap="outerHTML"
+      >🏠</button>
+      {% endif %}
       <button
         type="button"
         class="btn btn-ghost btn-xs"

@@ -1,5 +1,7 @@
 """Saving favorites, shared by the add view and the after-login hook."""
 
+from django.db import transaction
+
 from favorites.models import COORDINATE_DECIMALS, Favorite
 
 PENDING_FAVORITE_SESSION_KEY = "pending_favorite"
@@ -17,3 +19,12 @@ def save_favorite(user, place: dict) -> tuple[Favorite, bool]:
 def saved_message(favorite: Favorite) -> str:
     """Return the confirmation shown after a favorite is saved."""
     return f"Saved {favorite.place.label} to your favorites."
+
+
+def set_default_favorite(favorite: Favorite) -> None:
+    """Make this favorite its user's default location, replacing any other."""
+    with transaction.atomic():
+        others = favorite.user.favorites.exclude(pk=favorite.pk)
+        others.filter(is_default=True).update(is_default=False)
+        favorite.is_default = True
+        favorite.save(update_fields=["is_default"])

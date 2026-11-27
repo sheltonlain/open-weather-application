@@ -6,6 +6,14 @@ from weather.services import Place
 COORDINATE_DECIMALS = 4
 
 
+class FavoriteQuerySet(models.QuerySet):
+    """Favorites queries, also usable as ``user.favorites.<method>``."""
+
+    def default(self) -> "Favorite | None":
+        """Return the default favorite, or None if there is none."""
+        return self.filter(is_default=True).first()
+
+
 class Favorite(models.Model):
     """A place a user saved, stored as a snapshot of the geocoded result."""
 
@@ -18,13 +26,22 @@ class Favorite(models.Model):
     lat = models.DecimalField(max_digits=7, decimal_places=COORDINATE_DECIMALS)
     lon = models.DecimalField(max_digits=8, decimal_places=COORDINATE_DECIMALS)
     created_at = models.DateTimeField(auto_now_add=True)
+    # The place the dashboard opens on; at most one per user.
+    is_default = models.BooleanField(default=False)
+
+    objects = FavoriteQuerySet.as_manager()
 
     class Meta:
         ordering = ["created_at", "id"]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "lat", "lon"], name="unique_favorite_per_user"
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(is_default=True),
+                name="one_default_favorite_per_user",
+            ),
         ]
 
     def __str__(self) -> str:
