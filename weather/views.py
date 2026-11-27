@@ -191,3 +191,17 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
         "speed_unit": SPEED_LABELS[units],
     }
     return render(request, template, context)
+
+
+def weather_badge(request: HttpRequest) -> HttpResponse:
+    """Show a place's current emoji and temperature, e.g. next to a favorite."""
+    coordinates = _parse_coordinates(request.GET)
+    if coordinates is None:
+        return HttpResponse(INVALID_LOCATION_MESSAGE, status=400)
+    units = active_units(request)
+    try:
+        weather = get_current_weather(*coordinates).in_units(units)
+    except WeatherServiceError:
+        weather = None
+    context = {"weather": weather, "temp_unit": TEMP_LABELS[units]}
+    return render(request, "weather/partials/weather_badge.html", context)

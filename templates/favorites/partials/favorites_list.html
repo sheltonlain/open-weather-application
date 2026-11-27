@@ -15,6 +15,14 @@
         hx-swap="outerHTML"
         hx-indicator="#weather-panel"
       >{{ favorite.place.label }}</a>
+      {# Loads this favorite's current weather; a sibling of the link, so it #}
+      {# doesn't inherit the link's #weather-panel target. #}
+      <span
+        class="text-sm text-base-content/70 whitespace-nowrap"
+        hx-get="{% url 'weather_badge' %}?lat={{ favorite.place.lat }}&amp;lon={{ favorite.place.lon }}"
+        hx-trigger="load, unitsChanged from:body"
+        hx-swap="innerHTML"
+      ><span class="loading loading-dots loading-xs" aria-label="Loading weather"></span></span>
       <button
         type="button"
         class="btn btn-ghost btn-xs"
