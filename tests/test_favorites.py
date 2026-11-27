@@ -351,3 +351,44 @@ def test_invalid_save_while_logged_out_is_not_kept(client):
     )
 
     assert not Favorite.objects.exists()
+
+
+# --- Marking saved and selected places --------------------------------------
+# A script in base.html matches these rounded coordinates to highlight the
+# favorite being viewed and to show "★ Saved" on buttons for saved places.
+
+
+@pytest.mark.django_db
+def test_favorite_links_carry_rounded_coordinates(client):
+    user = UserFactory()
+    FavoriteFactory(user=user, lat=40.7484, lon=-73.9967)
+    client.force_login(user)
+
+    response = client.get(reverse("favorites"), headers=HTMX)
+
+    assertContains(response, 'data-favorite data-lat="40.7484" data-lon="-73.9967"')
+
+
+@pytest.mark.django_db
+def test_save_buttons_carry_rounded_coordinates(client, mocked_responses):
+    # Fixture: London at 51.5073219, -0.1276474.
+    mocked_responses.get(GEO_DIRECT_URL, json=load_fixture("geo_direct_london.json"))
+
+    response = client.get(reverse("search"), {"q": "London"}, headers=HTMX)
+
+    assertContains(response, 'data-save-button data-lat="51.5073" data-lon="-0.1276"')
+
+
+@pytest.mark.django_db
+def test_weather_panel_marks_the_place_shown(client, mocked_responses):
+    mocked_responses.get(WEATHER_URL, json=load_fixture("weather_new_york.json"))
+
+    response = client.get(
+        reverse("weather"),
+        {"lat": "40.7484", "lon": "-73.9967", "name": "New York"},
+        headers=HTMX,
+    )
+
+    assertContains(
+        response, 'data-selected-place data-lat="40.7484" data-lon="-73.9967"'
+    )

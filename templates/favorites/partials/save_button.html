@@ -11,5 +11,12 @@
   <input type="hidden" name="country" value="{{ place.country }}">
   <input type="hidden" name="lat" value="{{ place.lat }}">
   <input type="hidden" name="lon" value="{{ place.lon }}">
-  <button type="submit" class="btn btn-ghost btn-xs" aria-label="Save {{ place.label }} to favorites">☆ Save</button>
+  {# base.html's markFavorites() turns this into "★ Saved" when the place is a favorite. #}
+  <button
+    type="submit"
+    data-save-button data-lat="{{ place.lat|floatformat:4 }}" data-lon="{{ place.lon|floatformat:4 }}"
+    data-label="{{ place.label }}"
+    class="btn btn-ghost btn-xs"
+    aria-label="Save {{ place.label }} to favorites"
+  >☆ Save</button>
 </form>

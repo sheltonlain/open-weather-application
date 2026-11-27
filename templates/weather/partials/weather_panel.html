@@ -19,6 +19,7 @@
   {% elif weather %}
   {# Summary: the background color follows the current condition. #}
   <div
+    data-selected-place data-lat="{{ place.lat|floatformat:4 }}" data-lon="{{ place.lon|floatformat:4 }}"
     data-weather-theme="{{ weather.theme }}"
     class="card shadow bg-linear-to-br
       {% if weather.theme == 'clear' %}from-amber-300 to-sky-400 text-slate-900
