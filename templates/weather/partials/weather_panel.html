@@ -81,25 +81,16 @@
         <div role="alert" class="alert alert-warning">{{ forecast_error }}</div>
         {% elif forecast %}
         <ul class="divide-y divide-base-200">
-          {% for row in forecast_rows %}
-          {% with day=row.day %}
-          <li class="grid grid-cols-[6rem_2rem_1fr] items-center gap-x-3 gap-y-1 py-2">
-            <span class="font-medium">{{ day.date|date:"D j M" }}</span>
+          {% for day in forecast %}
+          <li class="flex items-center gap-3 py-2">
+            <span class="w-24 font-medium">{{ day.date|date:"D j M" }}</span>
             <span class="text-2xl" aria-hidden="true">{{ day.emoji }}</span>
-            <span class="flex items-center gap-2">
-              <span class="flex-1 capitalize text-sm text-base-content/70">{{ day.description }}</span>
-              <span class="whitespace-nowrap">
-                <span class="text-base-content/70">{{ day.low|floatformat:0 }}{{ temp_unit }}</span>
-                <span class="font-semibold">/ {{ day.high|floatformat:0 }}{{ temp_unit }}</span>
-              </span>
+            <span class="flex-1 capitalize text-sm text-base-content/70">{{ day.description }}</span>
+            <span>
+              <span class="font-semibold">{{ day.high|floatformat:0 }}{{ temp_unit }}</span>
+              <span class="text-base-content/70">/ {{ day.low|floatformat:0 }}{{ temp_unit }}</span>
             </span>
-            {# The day's low-to-high range on the week's scale (both in percent). #}
-            <svg class="col-span-3 h-1.5 w-full" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true">
-              <rect width="100" height="6" rx="3" class="fill-base-200"></rect>
-              <rect x="{{ row.bar_x|floatformat:1 }}" width="{{ row.bar_width|floatformat:1 }}" height="6" rx="3" class="fill-warning"></rect>
-            </svg>
           </li>
-          {% endwith %}
           {% endfor %}
         </ul>
         <div class="relative h-56 mt-2">

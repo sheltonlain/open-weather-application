@@ -76,26 +76,6 @@ def _forecast_chart_data(forecast: list[DailyForecast], temp_unit: str) -> dict:
     }
 
 
-def _forecast_rows(forecast: list[DailyForecast]) -> list[dict]:
-    """Pair each day with its low-to-high bar on the week's temperature scale.
-
-    The bar's start (x) and width are percentages of the week's range.
-    """
-    if not forecast:
-        return []
-    lowest = min(day.low for day in forecast)
-    span = max(day.high for day in forecast) - lowest
-    rows = []
-    for day in forecast:
-        if span == 0:
-            bar_x, bar_width = 0.0, 100.0  # every day is the same temperature
-        else:
-            bar_x = (day.low - lowest) / span * 100
-            bar_width = (day.high - day.low) / span * 100
-        rows.append({"day": day, "bar_x": bar_x, "bar_width": bar_width})
-    return rows
-
-
 def _map_marker(place: Place, weather: CurrentWeather, units: str) -> dict:
     """Return one map marker's data, with weather already in display units."""
     return {
@@ -203,7 +183,6 @@ def weather_panel(request: HttpRequest) -> HttpResponse:
         "weather": weather,
         "error": error,
         "forecast": forecast,
-        "forecast_rows": _forecast_rows(forecast),
         "forecast_chart": _forecast_chart_data(forecast, TEMP_LABELS[units]),
         "forecast_error": forecast_error,
         "map_data": _map_data(request, place, weather, units),
