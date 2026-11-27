@@ -55,7 +55,7 @@ tests/             # pytest files + fixtures/ (saved OpenWeather JSON)
    - JS widgets inside swapped panels (e.g. the Leaflet map) find their container by a `data-*` attribute, not an `id`: HTMX "settles" attributes of id-matched elements after a swap, stripping classes the library added.
    - HTMX inherits `hx-target`/`hx-indicator` from ancestors, so an element that makes its own request (e.g. the favorite's weather badge from `GET /weather/badge/`) must be a sibling of a panel-loading link, not inside it.
    - **Loading states:** links that load the panel set `hx-indicator="#weather-panel"`; the panel dims with Tailwind's `[&.htmx-request]:` variant and children react with `in-[.htmx-request]:`. A script-driven `htmx.ajax` load must pass `source: "#weather-panel"` to get the same style.
-   - **Summary card colors:** `weather_theme(icon)` in `services.py` picks the gradient; the theme→class chain in `weather_panel.html` keeps full class names literal so Tailwind finds them. Dark themes (`night`, `rain`, `storm`) also set `data-theme="dark"` so DaisyUI buttons on them use light colors; classify any new theme as light or dark.
+   - **Summary card colors:** `weather_theme(icon)` in `services.py` picks the gradient; the theme→class chain in `weather/partials/theme_classes.html` (shared by the summary card and the favorites' weather chips) keeps full class names literal so Tailwind finds them. Dark themes (`night`, `rain`, `storm`) also set `data-theme="dark"` so DaisyUI buttons on them use light colors; classify any new theme as light or dark.
 
 ## 6. Testing Seams & Mocking
 - **Why:** the suite must run fully offline, fast, and without consuming live OpenWeather quota or needing the real API key.

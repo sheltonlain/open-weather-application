@@ -23,14 +23,7 @@
     data-weather-theme="{{ weather.theme }}"
     {# Dark cards use DaisyUI's dark theme, so buttons on them get light colors. #}
     {% if weather.theme == 'night' or weather.theme == 'rain' or weather.theme == 'storm' %}data-theme="dark"{% endif %}
-    class="card shadow bg-linear-to-br
-      {% if weather.theme == 'clear' %}from-amber-300 to-sky-400 text-slate-900
-      {% elif weather.theme == 'night' %}from-indigo-950 to-slate-700 text-white
-      {% elif weather.theme == 'rain' %}from-sky-700 to-slate-600 text-white
-      {% elif weather.theme == 'storm' %}from-slate-800 to-purple-900 text-white
-      {% elif weather.theme == 'snow' %}from-sky-50 to-slate-300 text-slate-900
-      {% elif weather.theme == 'mist' %}from-slate-200 to-zinc-400 text-slate-900
-      {% else %}from-slate-300 to-slate-500 text-slate-900{% endif %}"
+    class="card shadow bg-linear-to-br {% include 'weather/partials/theme_classes.html' with theme=weather.theme %}"
   >
     <div class="card-body">
       <div class="flex items-start justify-between gap-2">

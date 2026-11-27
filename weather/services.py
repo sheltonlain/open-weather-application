@@ -84,6 +84,11 @@ class Place:
         return ", ".join(part for part in (self.name, self.state, self.country) if part)
 
     @property
+    def region(self) -> str:
+        """Return "state, country", skipping any empty part."""
+        return ", ".join(part for part in (self.state, self.country) if part)
+
+    @property
     def query_string(self) -> str:
         """Return the query string that loads this place's weather panel."""
         return urlencode(

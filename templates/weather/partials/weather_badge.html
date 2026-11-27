@@ -1,1 +1,1 @@
-{% if weather %}{{ weather.emoji }} {{ weather.temp|floatformat:0 }}{{ temp_unit }}{% else %}<span title="Weather unavailable">—</span>{% endif %}
+{% if weather %}<span data-weather-theme="{{ weather.theme }}" class="badge border-0 shadow-sm whitespace-nowrap bg-linear-to-br {% include 'weather/partials/theme_classes.html' with theme=weather.theme %}">{{ weather.emoji }} {{ weather.temp|floatformat:0 }}{{ temp_unit }}</span>{% else %}<span title="Weather unavailable">—</span>{% endif %}

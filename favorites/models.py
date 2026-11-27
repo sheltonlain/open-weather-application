@@ -13,6 +13,10 @@ class FavoriteQuerySet(models.QuerySet):
         """Return the default favorite, or None if there is none."""
         return self.filter(is_default=True).first()
 
+    def default_first(self) -> "models.QuerySet[Favorite]":
+        """Return the favorites with the default one first, then oldest first."""
+        return self.order_by("-is_default", "created_at", "id")
+
 
 class Favorite(models.Model):
     """A place a user saved, stored as a snapshot of the geocoded result."""

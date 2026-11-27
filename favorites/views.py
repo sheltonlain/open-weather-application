@@ -53,7 +53,8 @@ def _render_list(
     template = "favorites/partials/favorites_list.html"
     if not request.htmx:
         template = "favorites/favorites.html"
-    context = {"favorites": request.user.favorites.all(), "message": message}
+    favorites = request.user.favorites.default_first()
+    context = {"favorites": favorites, "message": message}
     return render(request, template, context, status=status)
 
 

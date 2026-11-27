@@ -3,25 +3,30 @@
   <div data-flash role="status" class="alert alert-info mb-2">{{ message }}</div>
   {% endif %}
   {% if favorites %}
-  <ul class="menu w-full rounded-box bg-base-200">
+  <ul class="menu w-full gap-1 rounded-box bg-base-200">
     {% url 'weather' as weather_url %}
     {% for favorite in favorites %}
-    <li class="flex flex-row items-center">
+    {# The row being viewed (its link gets "menu-active" from markFavorites()) #}
+    {# shows a primary bar on its left edge and a light primary tint. #}
+    <li class="flex flex-row items-center gap-1 rounded-box border-l-4 border-transparent has-[.menu-active]:border-primary has-[.menu-active]:bg-primary/10">
       <a
         data-favorite data-lat="{{ favorite.place.lat|floatformat:4 }}" data-lon="{{ favorite.place.lon|floatformat:4 }}"
         data-remove-url="{% url 'remove_favorite' favorite.pk %}"
         data-set-default-url="{% url 'default_favorite' favorite.pk %}"{% if favorite.is_default %} data-default{% endif %}
-        class="flex-1"
+        class="flex min-w-0 flex-1 items-center gap-2 [&.menu-active]:bg-transparent [&.menu-active]:text-base-content"
         href="{{ weather_url }}?{{ favorite.place.query_string }}"
         hx-get="{{ weather_url }}?{{ favorite.place.query_string }}"
         hx-target="#weather-panel"
         hx-swap="outerHTML"
         hx-indicator="#weather-panel"
       >
-        {{ favorite.place.label }}
-        {% if favorite.is_default %}<span class="badge badge-primary badge-xs">Default</span>{% endif %}
+        {% if favorite.is_default %}<span aria-hidden="true" title="Default location">🏠</span><span class="sr-only">Default</span>{% endif %}
+        <span class="min-w-0">
+          <span class="block truncate font-semibold">{{ favorite.name }}</span>
+          {% if favorite.place.region %}<span class="block truncate text-xs text-base-content/60">{{ favorite.place.region }}</span>{% endif %}
+        </span>
       </a>
-      {# Loads this favorite's current weather; a sibling of the link, so it #}
+      {# Loads this favorite's weather chip; a sibling of the link, so it #}
       {# doesn't inherit the link's #weather-panel target. #}
       <span
         class="text-sm text-base-content/70 whitespace-nowrap"
@@ -65,6 +70,10 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-base-content/70">No favorites yet. Use "Save" on a place to add it.</p>
+  <div class="flex flex-col items-center gap-2 py-6 text-center">
+    <p class="text-5xl" aria-hidden="true">⭐</p>
+    <p class="font-semibold">No favorites yet</p>
+    <p class="text-sm text-base-content/70">Search for a place and tap ☆ Save to keep it here.</p>
+  </div>
   {% endif %}
 </div>

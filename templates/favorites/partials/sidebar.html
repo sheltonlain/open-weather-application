@@ -23,18 +23,26 @@
           {# Collapsed, the button becomes a tall tab with this label running down it. #}
           <span aria-hidden="true" class="hidden text-sm font-semibold [writing-mode:vertical-rl] lg:group-data-[collapsed]/sidebar:inline">Show favorites</span>
         </button>
-        <h2 class="card-title lg:group-data-[collapsed]/sidebar:invisible">Favorites</h2>
+        <h2 class="card-title lg:group-data-[collapsed]/sidebar:invisible">
+          <span aria-hidden="true" class="text-warning">★</span> Favorites
+          {% if user.is_authenticated %}
+          {# markFavorites() in base.html keeps this count right after saves and removals. #}
+          {% with count=user.favorites.count %}
+          <span data-favorites-count class="badge badge-sm{% if not count %} hidden{% endif %}">{{ count }}</span>
+          {% endwith %}
+          {% endif %}
+        </h2>
       </div>
       <div id="favorites-body" class="lg:group-data-[collapsed]/sidebar:invisible">
         {% if user.is_authenticated %}
-        {% include "favorites/partials/favorites_list.html" with favorites=user.favorites.all %}
+        {% include "favorites/partials/favorites_list.html" with favorites=user.favorites.default_first %}
         {% else %}
         {# Save buttons target this list; anonymous saves are sent to login. #}
-        <div id="favorites-list">
-          <p class="text-base-content/70">
-            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="link">Log in</a>
-            to save places and switch between them.
-          </p>
+        <div id="favorites-list" class="flex flex-col items-center gap-3 py-6 text-center">
+          <p class="text-5xl" aria-hidden="true">⭐</p>
+          <p class="text-sm text-base-content/70">Log in to save places and switch between them in one click.</p>
+          <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">Log in</a>
+          <a href="{% url 'register' %}" class="link text-sm">or create an account</a>
         </div>
         {% endif %}
       </div>
