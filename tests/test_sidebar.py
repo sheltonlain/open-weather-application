@@ -62,6 +62,16 @@ def test_sidebar_toggle_has_a_visible_show_favorites_label(client):
     assert ">Show favorites</span>" in button
 
 
+@pytest.mark.django_db
+def test_collapsed_sidebar_tab_has_a_star(client):
+    html = client.get(reverse("dashboard")).content.decode()
+
+    start = html.index("data-sidebar-toggle")
+    button = html[start : html.index("</button>", start)]
+    assert "text-warning" in button
+    assert ">★</span>" in button
+
+
 # --- How the sidebar looks ----------------------------------------------------
 
 
